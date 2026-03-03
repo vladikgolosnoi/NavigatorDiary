@@ -1,0 +1,502 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RoleName {
+  ORGANIZER
+  LEADER
+  NAVIGATOR
+}
+
+enum TeamStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+  BLOCKED
+}
+
+enum GoalStatus {
+  SELECTED
+  IN_PROGRESS
+  PENDING_CONFIRMATION
+  ACHIEVED
+}
+
+enum SpecialtyStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum SpecialtyLevelName {
+  BRONZE
+  SILVER
+  GOLD
+}
+
+enum SpecialtyResourceType {
+  VIDEO
+  MATERIAL
+}
+
+enum NotificationScope {
+  ALL
+  TEAM
+  ORGANIZERS
+}
+
+enum ChatMessageType {
+  USER
+  SYSTEM
+}
+
+enum AppealStatus {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+}
+
+enum BranchAwardType {
+  PARTICIPATION
+  ACTIVE_PARTICIPATION
+  WIN
+}
+
+enum AgeStatus {
+  SCOUT
+  NAVIGATOR
+  NOVATOR
+  WANDERER
+}
+
+enum AchievementStage {
+  START
+  PATH
+  TRAIL
+  ROUTE
+  EXPEDITION
+  SUCCESS
+}
+
+model Role {
+  id        String    @id @default(cuid())
+  name      RoleName  @unique
+  createdAt DateTime  @default(now())
+  users     User[]
+}
+
+model Team {
+  id           String     @id @default(cuid())
+  name         String
+  city         String
+  institution  String
+  status       TeamStatus @default(PENDING)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  approvedAt   DateTime?
+  approvedById String?
+
+  approvedBy   User?       @relation("TeamApproval", fields: [approvedById], references: [id])
+  users        User[]
+  chatMessages ChatMessage[]
+  notifications Notification[]
+  appeals      Appeal[]
+  branchAwards BranchAward[]
+}
+
+model User {
+  id           String     @id @default(cuid())
+  firstName    String
+  lastName     String
+  middleName   String?
+  birthDate    DateTime
+  email        String?    @unique
+  passwordHash String
+  status       UserStatus @default(PENDING)
+  roleId       String
+  teamId       String?
+  approvedById String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  lastLoginAt  DateTime?
+
+  role               Role   @relation(fields: [roleId], references: [id])
+  team               Team?  @relation(fields: [teamId], references: [id])
+
+  approvedBy          User?  @relation("UserApprovals", fields: [approvedById], references: [id])
+  approvedUsers       User[] @relation("UserApprovals")
+
+  approvedTeams       Team[] @relation("TeamApproval")
+
+  goalSelections      GoalSelection[]
+  userGoals           UserGoal[]
+  goalReactions       GoalReaction[]
+
+  specialties         UserSpecialty[]
+  achievement         Achievement?
+
+  announcementsCreated Announcement[] @relation("AnnouncementCreatedBy")
+  notificationsCreated Notification[] @relation("NotificationCreatedBy")
+  notificationReceipts NotificationReceipt[]
+
+  chatMessages        ChatMessage[]
+  chatReactions       ChatReaction[]
+
+  anonymousNotes      AnonymousNote[]
+  appeals             Appeal[]
+  appealMessages      AppealMessage[]
+
+  auditLogs           AuditLog[]
+
+  goalConfirmations      UserGoal[]       @relation("UserGoalConfirmation")
+  specialtyConfirmations UserSpecialty[]  @relation("UserSpecialtyConfirmation")
+
+  branchAwards         BranchAward[]
+  branchAwardsGiven    BranchAward[] @relation("BranchAwardOrganizer")
+}
+
+model Sphere {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  sortOrder   Int          @default(0)
+  competencies Competency[]
+}
+
+model Competency {
+  id          String  @id @default(cuid())
+  sphereId    String
+  name        String
+  description String?
+  sortOrder   Int     @default(0)
+
+  sphere Sphere @relation(fields: [sphereId], references: [id])
+  goals  Goal[]
+}
+
+model Goal {
+  id            String  @id @default(cuid())
+  competencyId  String
+  ageGroupId    String?
+  name          String
+  description   String?
+  sortOrder     Int     @default(0)
+
+  competency Competency    @relation(fields: [competencyId], references: [id])
+  ageGroup   AgeGroup?     @relation(fields: [ageGroupId], references: [id])
+  activities GoalActivity[]
+  userGoals  UserGoal[]
+}
+
+model AgeGroup {
+  id        String @id @default(cuid())
+  name      String @unique
+  minAge    Int
+  maxAge    Int
+  sortOrder Int    @default(0)
+
+  goals Goal[]
+}
+
+model GoalActivity {
+  id      String @id @default(cuid())
+  goalId  String
+  title   String
+  url     String
+
+  goal Goal @relation(fields: [goalId], references: [id])
+}
+
+model GoalSelection {
+  id             String   @id @default(cuid())
+  userId         String
+  selectedAt     DateTime @default(now())
+  nextEligibleAt DateTime
+  createdAt      DateTime @default(now())
+
+  user  User       @relation(fields: [userId], references: [id])
+  goals UserGoal[]
+}
+
+model UserGoal {
+  id             String     @id @default(cuid())
+  userId         String
+  goalId         String
+  selectionId    String
+  status         GoalStatus @default(SELECTED)
+  comment        String?
+  confirmedAt    DateTime?
+  confirmedById  String?
+  achievedAt     DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id])
+  goal        Goal     @relation(fields: [goalId], references: [id])
+  selection   GoalSelection @relation(fields: [selectionId], references: [id])
+  progress    GoalProgress[]
+  reactions   GoalReaction[]
+
+  confirmedBy User? @relation("UserGoalConfirmation", fields: [confirmedById], references: [id])
+
+  @@index([userId, status])
+}
+
+model GoalProgress {
+  id         String   @id @default(cuid())
+  userGoalId String
+  note       String?
+  createdAt  DateTime @default(now())
+
+  userGoal UserGoal @relation(fields: [userGoalId], references: [id])
+}
+
+model GoalReaction {
+  id         String   @id @default(cuid())
+  userGoalId String
+  userId     String
+  createdAt  DateTime @default(now())
+
+  userGoal UserGoal @relation(fields: [userGoalId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+
+  @@unique([userGoalId, userId])
+}
+
+model Area {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  sortOrder   Int         @default(0)
+
+  specialties Specialty[]
+}
+
+model Specialty {
+  id          String   @id @default(cuid())
+  areaId      String
+  name        String
+  description String?
+  sortOrder   Int      @default(0)
+
+  area      Area              @relation(fields: [areaId], references: [id])
+  levels    SpecialtyLevel[]
+  resources SpecialtyResource[]
+  users     UserSpecialty[]
+}
+
+model SpecialtyLevel {
+  id           String             @id @default(cuid())
+  specialtyId  String
+  name         SpecialtyLevelName
+  description  String?
+  sortOrder    Int                @default(0)
+
+  specialty    Specialty             @relation(fields: [specialtyId], references: [id])
+  checklist    SpecialtyChecklistItem[]
+  userSpecialties UserSpecialty[]
+}
+
+model SpecialtyResource {
+  id          String               @id @default(cuid())
+  specialtyId String
+  type        SpecialtyResourceType
+  title       String
+  url         String
+
+  specialty Specialty @relation(fields: [specialtyId], references: [id])
+}
+
+model SpecialtyChecklistItem {
+  id        String   @id @default(cuid())
+  levelId   String
+  title     String
+  description String?
+  sortOrder Int      @default(0)
+
+  level      SpecialtyLevel          @relation(fields: [levelId], references: [id])
+  userItems  UserSpecialtyChecklist[]
+}
+
+model UserSpecialty {
+  id            String          @id @default(cuid())
+  userId        String
+  specialtyId   String
+  levelId       String
+  status        SpecialtyStatus @default(ACTIVE)
+  startedAt     DateTime        @default(now())
+  completedAt   DateTime?
+  confirmedAt   DateTime?
+  confirmedById String?
+
+  user      User          @relation(fields: [userId], references: [id])
+  specialty Specialty     @relation(fields: [specialtyId], references: [id])
+  level     SpecialtyLevel @relation(fields: [levelId], references: [id])
+  checklist UserSpecialtyChecklist[]
+
+  confirmedBy User? @relation("UserSpecialtyConfirmation", fields: [confirmedById], references: [id])
+
+  @@index([userId, status])
+}
+
+model UserSpecialtyChecklist {
+  id               String   @id @default(cuid())
+  userSpecialtyId  String
+  checklistItemId  String
+  checkedAt        DateTime @default(now())
+
+  userSpecialty UserSpecialty      @relation(fields: [userSpecialtyId], references: [id])
+  checklistItem SpecialtyChecklistItem @relation(fields: [checklistItemId], references: [id])
+
+  @@unique([userSpecialtyId, checklistItemId])
+}
+
+model Achievement {
+  id                 String            @id @default(cuid())
+  userId             String            @unique
+  ageStatus          AgeStatus
+  stage              AchievementStage
+  goalsAchievedCount Int               @default(0)
+  updatedAt          DateTime          @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Announcement {
+  id          String   @id @default(cuid())
+  title       String
+  body        String
+  isActive    Boolean  @default(true)
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String
+
+  createdBy User @relation("AnnouncementCreatedBy", fields: [createdById], references: [id])
+}
+
+model Notification {
+  id          String             @id @default(cuid())
+  title       String
+  body        String
+  scope       NotificationScope  @default(ALL)
+  teamId      String?
+  createdById String
+  createdAt   DateTime           @default(now())
+  expiresAt   DateTime?
+
+  team      Team? @relation(fields: [teamId], references: [id])
+  createdBy User  @relation("NotificationCreatedBy", fields: [createdById], references: [id])
+  receipts  NotificationReceipt[]
+}
+
+model NotificationReceipt {
+  id              String   @id @default(cuid())
+  notificationId  String
+  userId          String
+  readAt          DateTime?
+
+  notification Notification @relation(fields: [notificationId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
+
+  @@unique([notificationId, userId])
+}
+
+model ChatMessage {
+  id        String          @id @default(cuid())
+  teamId    String
+  userId    String?
+  type      ChatMessageType @default(USER)
+  content   String
+  createdAt DateTime        @default(now())
+
+  team      Team @relation(fields: [teamId], references: [id])
+  user      User? @relation(fields: [userId], references: [id])
+  reactions ChatReaction[]
+}
+
+model ChatReaction {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  reaction  String
+  createdAt DateTime @default(now())
+
+  message ChatMessage @relation(fields: [messageId], references: [id])
+  user    User        @relation(fields: [userId], references: [id])
+
+  @@unique([messageId, userId, reaction])
+}
+
+model AnonymousNote {
+  id        String   @id @default(cuid())
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Appeal {
+  id        String       @id @default(cuid())
+  userId    String
+  teamId    String?
+  subject   String
+  status    AppealStatus @default(OPEN)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  user     User    @relation(fields: [userId], references: [id])
+  team     Team?   @relation(fields: [teamId], references: [id])
+  messages AppealMessage[]
+}
+
+model AppealMessage {
+  id        String   @id @default(cuid())
+  appealId  String
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+
+  appeal Appeal @relation(fields: [appealId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model BranchAward {
+  id          String           @id @default(cuid())
+  userId      String
+  teamId      String
+  organizerId String
+  type        BranchAwardType
+  amount      Int
+  note        String?
+  createdAt   DateTime         @default(now())
+
+  user      User @relation(fields: [userId], references: [id])
+  team      Team @relation(fields: [teamId], references: [id])
+  organizer User @relation("BranchAwardOrganizer", fields: [organizerId], references: [id])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  action    String
+  entity    String
+  entityId  String?
+  data      Json?
+  createdAt DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id])
+}

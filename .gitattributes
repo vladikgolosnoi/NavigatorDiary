@@ -1,0 +1,8 @@
+* text=auto eol=lf
+
+# Документы и бинарные материалы заказчика
+*.pdf binary
+*.docx binary
+*.png binary
+*.jpg binary
+*.jpeg binary

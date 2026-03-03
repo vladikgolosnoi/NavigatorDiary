@@ -1,0 +1,39 @@
+# Системные файлы
+.DS_Store
+Thumbs.db
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Сборка и кэш
+dist/
+build/
+coverage/
+.cache/
+.vite/
+*.tsbuildinfo
+
+# Переменные окружения
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+apps/server/.env
+apps/web/.env
+
+# Логи и временные файлы
+logs/
+*.log
+tmp/
+temp/
+
+# IDE / редакторы
+.idea/
+.vscode/
+*.swp
+*.swo

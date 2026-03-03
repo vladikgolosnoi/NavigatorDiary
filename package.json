@@ -1,0 +1,19 @@
+{
+  "name": "navigator-diary",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev -w apps/web",
+    "dev:server": "npm run start:dev -w apps/server",
+    "build:web": "npm run build -w apps/web",
+    "build:server": "npm run build -w apps/server",
+    "lint:web": "npm run lint -w apps/web",
+    "lint:server": "npm run lint -w apps/server"
+  },
+  "overrides": {
+    "esbuild": "0.27.2"
+  }
+}
