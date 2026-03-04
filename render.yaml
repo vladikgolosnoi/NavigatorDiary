@@ -1,15 +1,17 @@
 services:
   - type: web
-    name: navigator-diary
+    name: navigator-diary-app
     runtime: node
     plan: free
     branch: main
-    buildCommand: npm ci && npm run build:web && npm run build:server && npx prisma generate --schema apps/server/prisma/schema.prisma
+    buildCommand: npm ci --include=dev && npm run build:web && npm run build:server && npx prisma generate --schema apps/server/prisma/schema.prisma
     startCommand: npx prisma migrate deploy --schema apps/server/prisma/schema.prisma && node apps/server/dist/prisma/seed.js && node apps/server/dist/src/main.js
     healthCheckPath: /
     envVars:
       - key: NODE_ENV
         value: production
+      - key: NPM_CONFIG_PRODUCTION
+        value: "false"
       - key: NODE_VERSION
         value: 18
       - key: DATABASE_URL
