@@ -18,6 +18,7 @@ Fullstack-проект (PWA + API) для программы «Дружина н
 - Пошаговые задания реализации: `TASKS.md`
 - Отчет соответствия ТЗ: `docs/tz_compliance_report.md`
 - Пользовательская инструкция и тест-сценарии: `docs/user_guide_testing.md`
+- Публичный деплой для заказчика: `docs/deploy_public.md`
 - Исходные файлы ТЗ и приложений: `docs/specs/README.md`
 
 ## Что реализовано
