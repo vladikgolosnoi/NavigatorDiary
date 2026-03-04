@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node dist/main.js",
     "start:dev": "nest start --watch",
-    "build": "nest build",
+    "build": "prisma generate && nest build",
     "lint": "eslint .",
     "test": "jest --config jest.config.ts",
     "test:watch": "jest --watch --config jest.config.ts",
