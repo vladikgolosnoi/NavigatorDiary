@@ -15,8 +15,6 @@ Fullstack-проект (PWA + API) для программы «Дружина н
 - Описание и запуск: `README.md`
 - Карта структуры репозитория: `docs/repository_structure.md`
 - Индекс документации: `docs/README.md`
-- Портфолио-обзор для HR: `docs/hr/portfolio_overview.md`
-- План скриншотов для презентации: `docs/screenshots/README.md`
 - Пошаговые задания реализации: `TASKS.md`
 - Отчет соответствия ТЗ: `docs/tz_compliance_report.md`
 - Пользовательская инструкция и тест-сценарии: `docs/user_guide_testing.md`
@@ -136,30 +134,3 @@ npm run dev:server
 - Файл значков
 
 Состав и назначение файлов: `docs/specs/README.md`
-
-## Скриншоты интерфейса
-
-Для публичной презентации добавьте реальные скриншоты в `docs/screenshots/`:
-
-- `01_auth.png`
-- `02_home.png`
-- `03_goals.png`
-- `04_specialties.png`
-- `05_achievements.png`
-- `06_beaver_hut.png`
-- `07_chat.png`
-- `08_organizer_dashboard.png`
-
-Инструкция по съемке и формату: `docs/screenshots/README.md`.
-
-## Для публикации на GitHub
-
-- В репозитории не хранятся локальные зависимости, артефакты сборки и `.env`.
-- Шаблоны для командной работы:
-  - `CONTRIBUTING.md`
-  - `.github/PULL_REQUEST_TEMPLATE.md`
-  - `.github/ISSUE_TEMPLATE/bug_report.md`
-- Лицензия: `LICENSE`
-- Технические метаданные: `.editorconfig`, `.gitattributes`, `CODE_OF_CONDUCT.md`
-- Финальный чек-лист выкладки: `docs/hr/github_publish_checklist.md`
-- Рекомендуемый сценарий первого публичного push (с чистой историей) — в `docs/hr/github_publish_checklist.md`.
