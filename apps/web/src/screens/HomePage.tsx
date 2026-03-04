@@ -4,6 +4,7 @@ import { BadgeRow } from '../components/BadgeRow'
 import { LogoCluster } from '../components/LogoCluster'
 import { MascotBadgeRow, StageBadgeGrid } from '../components/AchievementBadges'
 import { apiFetch, ApiError } from '../api/client'
+import { scrollToSectionById } from '../utils/scroll'
 
 const initialAnnouncements = [
   {
@@ -35,10 +36,7 @@ export function HomePage() {
   const [errorMessage, setErrorMessage] = useState('')
 
   const focusAnnouncements = () => {
-    const section = document.getElementById('home-announcements')
-    if (section) {
-      section.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
+    scrollToSectionById('home-announcements')
   }
 
   useEffect(() => {
@@ -83,7 +81,7 @@ export function HomePage() {
 
       <div className="card">
         <h3>Значки этапов</h3>
-        <p>Новые значки из файла «значки.pdf» добавлены в мобильный интерфейс.</p>
+        <p>Собирайте значки этапов и отмечайте новые достижения команды.</p>
         <MascotBadgeRow />
         <StageBadgeGrid compact />
       </div>

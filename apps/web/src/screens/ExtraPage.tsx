@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { apiFetch, ApiError } from '../api/client'
 import { useAuth } from '../state/auth'
+import { scrollToSectionById } from '../utils/scroll'
 
 type AppealMessage = {
   id: string
@@ -62,18 +63,12 @@ export function ExtraPage() {
 
   const focusTerms = () => {
     setNotice('Правила доступны ниже на странице.')
-    const section = document.getElementById('extra-terms')
-    if (section) {
-      section.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
+    scrollToSectionById('extra-terms')
   }
 
   const focusConsultant = () => {
     setNotice('Откройте блок онлайн-консультанта ниже на странице.')
-    const section = document.getElementById('extra-chat')
-    if (section) {
-      section.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
+    scrollToSectionById('extra-chat')
   }
 
   const sendToConsultant = async () => {

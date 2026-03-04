@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import type { SubMenuItem } from '../state/navigation'
+import { scrollToSectionById } from '../utils/scroll'
 
 type SubNavProps = {
   items: SubMenuItem[]
@@ -15,13 +16,13 @@ export function SubNav({ items }: SubNavProps) {
       return
     }
     const nextHash = `#${anchor}`
-    navigate({ pathname: location.pathname, hash: nextHash }, { replace: true })
+    navigate(
+      { pathname: location.pathname, hash: nextHash },
+      { replace: true, preventScrollReset: true }
+    )
     window.setTimeout(() => {
-      const element = document.getElementById(anchor)
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }
-    }, 50)
+      scrollToSectionById(anchor)
+    }, 0)
   }
 
   return (

@@ -4,6 +4,7 @@ import { BadgeRow } from '../components/BadgeRow'
 import { apiFetch, ApiError } from '../api/client'
 import { useAuth } from '../state/auth'
 import progressSteps from '../assets/illustrations/progress-steps.png'
+import { scrollToSectionById } from '../utils/scroll'
 
 const weekMs = 7 * 24 * 60 * 60 * 1000
 
@@ -167,10 +168,7 @@ export function MyGoalsPage() {
       return
     }
     setNotice('Выберите цель ниже и нажмите «Отметить прогресс».')
-    const section = document.getElementById('goals-list')
-    if (section) {
-      section.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
+    scrollToSectionById('goals-list')
   }
 
   const supportGoal = async (goalId: string) => {
