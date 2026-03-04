@@ -17,10 +17,10 @@
 2. Нажать **New +** -> **Blueprint**.
 3. Подключить GitHub-репозиторий `vladikgolosnoi/NavigatorDiary`.
 4. Подтвердить создание сервисов из `render.yaml`.
-5. Дождаться статуса **Live** у сервиса `navigator-diary-app`.
+5. Дождаться статуса **Live** у сервиса `navigator-diary`.
 
 После этого появится публичный URL вида:
-`https://navigator-diary-app.onrender.com`
+`https://navigator-diary.onrender.com`
 
 ## Данные для теста
 

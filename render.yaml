@@ -1,20 +1,12 @@
 services:
   - type: web
-    name: navigator-diary-app
+    name: navigator-diary
     runtime: node
     plan: free
     branch: main
-    autoDeploy: true
-    buildCommand: >
-      npm ci &&
-      npx prisma generate --schema apps/server/prisma/schema.prisma &&
-      npm run build:web &&
-      npm run build:server
-    startCommand: >
-      npx prisma migrate deploy --schema apps/server/prisma/schema.prisma &&
-      (node apps/server/dist/prisma/seed.js || true) &&
-      node apps/server/dist/src/main.js
-    healthCheckPath: /api
+    buildCommand: npm ci && npm run build:web && npm run build:server && npx prisma generate --schema apps/server/prisma/schema.prisma
+    startCommand: npx prisma migrate deploy --schema apps/server/prisma/schema.prisma && node apps/server/dist/prisma/seed.js && node apps/server/dist/src/main.js
+    healthCheckPath: /
     envVars:
       - key: NODE_ENV
         value: production
@@ -25,10 +17,9 @@ services:
           name: navigator-diary-db
           property: connectionString
       - key: JWT_SECRET
-        generateValue: true
+        sync: false
 
 databases:
   - name: navigator-diary-db
     databaseName: navigator_diary
-    user: navigator_diary_user
     plan: free
