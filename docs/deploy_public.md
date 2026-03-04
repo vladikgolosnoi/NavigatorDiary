@@ -2,6 +2,9 @@
 
 Цель: получить одну публичную ссылку, где работают и интерфейс, и API, и база данных.
 
+Быстрый запуск в 1 клик:
+[Deploy to Render](https://render.com/deploy?repo=https://github.com/vladikgolosnoi/NavigatorDiary)
+
 ## Что уже подготовлено в репозитории
 
 - Добавлен `render.yaml` (Blueprint) в корень проекта.

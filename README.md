@@ -10,6 +10,8 @@
 Fullstack-проект (PWA + API) для программы «Дружина навигаторов».  
 Цель: цифровой «дневник роста» с ролями, достижениями, каталогами целей/специальностей и командным взаимодействием.
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/vladikgolosnoi/NavigatorDiary)
+
 ## Быстрые ссылки
 
 - Описание и запуск: `README.md`
