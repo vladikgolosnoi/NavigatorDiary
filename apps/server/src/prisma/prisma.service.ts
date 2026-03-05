@@ -1,10 +1,16 @@
-import { Injectable, OnModuleInit, INestApplication } from '@nestjs/common'
+import { Injectable, OnModuleInit, INestApplication, Logger } from '@nestjs/common'
 import { PrismaClient } from '@prisma/client'
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
+  private readonly logger = new Logger(PrismaService.name)
+
   async onModuleInit() {
-    await this.$connect()
+    // Не блокируем старт HTTP-сервера, пока free-БД Render «просыпается».
+    void this.$connect().catch((error: unknown) => {
+      this.logger.warn('Первичное подключение к БД не удалось, повтор при первом запросе')
+      this.logger.debug(String(error))
+    })
   }
 
   async enableShutdownHooks(app: INestApplication) {
