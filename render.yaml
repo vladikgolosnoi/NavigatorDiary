@@ -5,6 +5,7 @@ services:
     plan: free
     branch: main
     buildCommand: npm ci --include=dev && npx prisma generate --schema apps/server/prisma/schema.prisma && npm run build:web && npm run build:server
+    preDeployCommand: npx prisma migrate deploy --schema apps/server/prisma/schema.prisma && npm run db:seed -w apps/server
     startCommand: node apps/server/dist/src/main.js
     healthCheckPath: /api/health
     envVars:
