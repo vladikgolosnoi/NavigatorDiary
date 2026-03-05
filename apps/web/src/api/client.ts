@@ -21,10 +21,17 @@ function resolveApiBase() {
     return '/api'
   }
 
-  // Для статического запуска без proxy направляем запросы прямо в API контейнер.
-  const host = hostname || 'localhost'
-  const apiProtocol = protocol === 'https:' ? 'https:' : 'http:'
-  return `${apiProtocol}//${host}:3000/api`
+  // В production фронт и API обслуживаются одним доменом (Render/Nest static).
+  if (protocol === 'https:') {
+    return '/api'
+  }
+
+  // Локальный статический запуск (не Vite): если web открыт с localhost без :3000.
+  if ((hostname === 'localhost' || hostname === '127.0.0.1') && port && port !== '3000') {
+    return `http://${hostname}:3000/api`
+  }
+
+  return '/api'
 }
 
 const API_BASE = resolveApiBase()
