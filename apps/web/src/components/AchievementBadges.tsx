@@ -1,5 +1,4 @@
 import badgeBeaver from '../assets/badges/badge-beaver.png'
-import badgePhoenix from '../assets/badges/badge-phoenix.png'
 import badgeRoute from '../assets/badges/badge-route.png'
 import badgeTrail from '../assets/badges/badge-trail.png'
 import badgeStart from '../assets/badges/badge-start.png'
@@ -22,7 +21,7 @@ type StageBadge = {
 }
 
 type MascotBadge = {
-  code: 'BEAVER' | 'PHOENIX'
+  code: 'BEAVER'
   label: string
   icon: string
 }
@@ -37,8 +36,7 @@ export const stageBadges: StageBadge[] = [
 ]
 
 export const mascotBadges: MascotBadge[] = [
-  { code: 'BEAVER', label: 'Бобер', icon: badgeBeaver },
-  { code: 'PHOENIX', label: 'Феникс', icon: badgePhoenix }
+  { code: 'BEAVER', label: 'Бобр', icon: badgeBeaver }
 ]
 
 export function getStageBadge(code?: string) {

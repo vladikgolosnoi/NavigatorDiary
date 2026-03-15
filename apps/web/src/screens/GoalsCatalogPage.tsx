@@ -259,7 +259,7 @@ export function GoalsCatalogPage() {
         lastSelectedAt: response.selectedAt,
         nextEligibleAt: response.nextEligibleAt
       })
-      setNotice('Выбор сохранен. Следующий выбор будет доступен через 3 месяца.')
+      navigate('/goals/my')
     } catch (error) {
       const apiError = error as ApiError
       setErrorMessage(apiError.message || 'Не удалось сохранить выбор целей')

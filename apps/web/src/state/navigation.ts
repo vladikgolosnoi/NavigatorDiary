@@ -12,6 +12,7 @@ export type TopNavItem = {
 export type SubMenuItem = {
   label: string
   anchor?: string
+  roles?: UserRole[]
 }
 
 export const topNavItems: TopNavItem[] = [
@@ -105,9 +106,8 @@ export const subMenus: Array<{ prefix: string; items: SubMenuItem[] }> = [
   {
     prefix: '/home',
     items: [
-      { label: 'Приветствие', anchor: 'home-welcome' },
-      { label: 'Анонсы', anchor: 'home-announcements' },
-      { label: 'Новости команды', anchor: 'home-team' }
+      { label: 'О проекте', anchor: 'home-welcome' },
+      { label: 'Сферы развития', anchor: 'home-welcome', roles: ['LEADER', 'NAVIGATOR'] }
     ]
   },
   {
@@ -166,7 +166,8 @@ export const subMenus: Array<{ prefix: string; items: SubMenuItem[] }> = [
     items: [
       { label: 'Жёлуди', anchor: 'beaver-acorns' },
       { label: 'Веточки', anchor: 'beaver-twigs' },
-      { label: 'Поленья', anchor: 'beaver-logs' }
+      { label: 'Поленья', anchor: 'beaver-logs' },
+      { label: 'Корректировки', anchor: 'beaver-adjustments', roles: ['ORGANIZER'] }
     ]
   },
   {
@@ -196,9 +197,9 @@ export const subMenus: Array<{ prefix: string; items: SubMenuItem[] }> = [
   {
     prefix: '/leader',
     items: [
-      { label: 'Подтверждения', anchor: 'leader-approvals' },
-      { label: 'Пользователи', anchor: 'leader-users' },
-      { label: 'Специальности', anchor: 'leader-specialties' }
+      { label: 'Участники', anchor: 'leader-users' },
+      { label: 'Цели', anchor: 'leader-goals' },
+      { label: 'Создать команду', anchor: 'leader-create-team' }
     ]
   }
 ]
@@ -227,8 +228,8 @@ export const screenConfigs: ScreenConfig[] = [
   {
     path: '/home',
     title: 'Главная',
-    description: 'Приветствие, логотипы и ключевые объявления проекта.',
-    badges: ['Логотипы', 'Анонсы', 'Новости команды'],
+    description: 'Логотип проекта, описание движения и быстрые переходы к сферам развития.',
+    badges: ['Логотип проекта', 'Описание', 'Сферы развития'],
     showLogos: true
   },
   {
@@ -294,15 +295,16 @@ export const screenConfigs: ScreenConfig[] = [
   {
     path: '/leader',
     title: 'Панель руководителя',
-    description: 'Подтверждения команды и управление коммуникациями.',
-    badges: ['Команда', 'Чат', 'Подтверждения']
+    description: 'Подтверждения команды и создание новой команды.',
+    badges: ['Участники', 'Цели', 'Команда']
   }
 ]
 
-export function getSubMenu(pathname: string) {
+export function getSubMenu(pathname: string, role?: UserRole | null) {
   const match = subMenus.find((item) => pathname.startsWith(item.prefix))
+  const items = match?.items?.filter((item) => !item.roles || (role ? item.roles.includes(role) : false))
   return (
-    match?.items ?? [
+    items ?? [
       { label: 'Навигация' },
       { label: 'Содержимое' },
       { label: 'Действия' }

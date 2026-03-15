@@ -9,6 +9,8 @@ import { ChatService } from '../chat/chat.service'
 import { AuditService } from '../audit/audit.service'
 import { UpdateGoalCommentDto } from './dto/update-goal-comment.dto'
 
+const MAX_PROGRESS_STEP = 4
+
 @Injectable()
 export class GoalsService {
   constructor(
@@ -108,7 +110,7 @@ export class GoalsService {
       where: {
         user: { teamId: user.teamId },
         userId: { not: user.userId },
-        status: { in: [GoalStatus.SELECTED, GoalStatus.IN_PROGRESS, GoalStatus.PENDING_CONFIRMATION] }
+        status: GoalStatus.PENDING_CONFIRMATION
       },
       include: {
         user: true,
@@ -138,7 +140,11 @@ export class GoalsService {
   async addProgress(user: AuthUser, userGoalId: string, dto: GoalProgressDto) {
     const userGoal = await this.prisma.userGoal.findUnique({
       where: { id: userGoalId },
-      include: { progress: { orderBy: { createdAt: 'desc' }, take: 1 } }
+      include: {
+        progress: { orderBy: { createdAt: 'desc' }, take: 1 },
+        user: true,
+        goal: true
+      }
     })
 
     if (!userGoal) {
@@ -147,6 +153,18 @@ export class GoalsService {
 
     if (userGoal.userId !== user.userId) {
       throw new ForbiddenException('Нельзя отмечать прогресс по чужой цели')
+    }
+
+    if (userGoal.status === GoalStatus.ACHIEVED) {
+      throw new BadRequestException('Цель уже подтверждена как достигнутая')
+    }
+
+    const currentProgressCount = await this.prisma.goalProgress.count({
+      where: { userGoalId: userGoal.id }
+    })
+
+    if (currentProgressCount >= MAX_PROGRESS_STEP || userGoal.status === GoalStatus.PENDING_CONFIRMATION) {
+      throw new BadRequestException('Цель уже отмечена как достигнутая и ждёт подтверждения')
     }
 
     const lastProgressAt = userGoal.progress[0]?.createdAt
@@ -158,6 +176,11 @@ export class GoalsService {
       }
     }
 
+    const nextProgressStep = currentProgressCount + 1
+    if (dto.step && dto.step !== nextProgressStep) {
+      throw new BadRequestException('Можно отметить только следующий шаг прогресса')
+    }
+
     const progress = await this.prisma.goalProgress.create({
       data: {
         userGoalId: userGoal.id,
@@ -165,10 +188,22 @@ export class GoalsService {
       }
     })
     await this.auditService.log('GOAL_PROGRESS', user.userId, 'UserGoalProgress', progress.id, {
-      userGoalId: userGoal.id
+      userGoalId: userGoal.id,
+      step: nextProgressStep
     })
 
-    if (userGoal.status === GoalStatus.SELECTED) {
+    if (nextProgressStep >= MAX_PROGRESS_STEP) {
+      await this.prisma.userGoal.update({
+        where: { id: userGoal.id },
+        data: { status: GoalStatus.PENDING_CONFIRMATION }
+      })
+
+      const displayName = `${userGoal.user.lastName} ${userGoal.user.firstName}`
+      const message = `${displayName} отметил цель ${userGoal.goal.name} достигнутой`
+      if (userGoal.user.teamId) {
+        await this.chatService.createSystemMessage(userGoal.user.teamId, message)
+      }
+    } else if (userGoal.status === GoalStatus.SELECTED) {
       await this.prisma.userGoal.update({
         where: { id: userGoal.id },
         data: { status: GoalStatus.IN_PROGRESS }
@@ -215,6 +250,10 @@ export class GoalsService {
       throw new ForbiddenException('Нельзя голосовать за цели другой команды')
     }
 
+    if (userGoal.status !== GoalStatus.PENDING_CONFIRMATION) {
+      throw new BadRequestException('Поддержка доступна после отметки цели как достигнутой')
+    }
+
     const alreadyReacted = await this.prisma.goalReaction.findUnique({
       where: { userGoalId_userId: { userGoalId, userId: user.userId } }
     })
@@ -234,13 +273,6 @@ export class GoalsService {
     })
 
     const reactionCount = userGoal.reactions.length + 1
-
-    if (reactionCount >= 5 && userGoal.status !== GoalStatus.ACHIEVED) {
-      await this.prisma.userGoal.update({
-        where: { id: userGoal.id },
-        data: { status: GoalStatus.PENDING_CONFIRMATION }
-      })
-    }
 
     return { reactionCount }
   }
@@ -281,7 +313,7 @@ export class GoalsService {
       confirmedById: user.userId
     })
     const displayName = `${userGoal.user.lastName} ${userGoal.user.firstName}`
-    const message = `${displayName} отметил цель ${userGoal.goal.name} достигнута`
+    const message = `${displayName} получил подтверждение по цели ${userGoal.goal.name}`
     if (userGoal.user.teamId) {
       await this.chatService.createSystemMessage(userGoal.user.teamId, message)
     }

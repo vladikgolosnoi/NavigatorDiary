@@ -73,6 +73,12 @@ enum BranchAwardType {
   WIN
 }
 
+enum BeaverResourceType {
+  ACORN
+  TWIG
+  LOG
+}
+
 enum AgeStatus {
   SCOUT
   NAVIGATOR
@@ -164,6 +170,8 @@ model User {
 
   branchAwards         BranchAward[]
   branchAwardsGiven    BranchAward[] @relation("BranchAwardOrganizer")
+  resourceAdjustments     BeaverResourceAdjustment[]
+  resourceAdjustmentsGiven BeaverResourceAdjustment[] @relation("BeaverResourceAdjustmentOrganizer")
 }
 
 model Sphere {
@@ -487,6 +495,21 @@ model BranchAward {
   user      User @relation(fields: [userId], references: [id])
   team      Team @relation(fields: [teamId], references: [id])
   organizer User @relation("BranchAwardOrganizer", fields: [organizerId], references: [id])
+}
+
+model BeaverResourceAdjustment {
+  id           String             @id @default(cuid())
+  userId       String
+  organizerId  String
+  resourceType BeaverResourceType
+  amount       Int
+  note         String?
+  createdAt    DateTime           @default(now())
+
+  user      User @relation(fields: [userId], references: [id])
+  organizer User @relation("BeaverResourceAdjustmentOrganizer", fields: [organizerId], references: [id])
+
+  @@index([userId, resourceType])
 }
 
 model AuditLog {

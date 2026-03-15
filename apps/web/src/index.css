@@ -714,6 +714,10 @@ img {
   gap: 10px;
 }
 
+.logo-link {
+  text-decoration: none;
+}
+
 .logo-card img {
   max-width: 150px;
   width: 100%;
@@ -741,6 +745,58 @@ img {
   border-radius: 12px;
   border: 1px solid rgba(11, 74, 111, 0.08);
   background: #fff;
+}
+
+.goal-progress-scale {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.goal-progress-step {
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: #fff;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  text-align: left;
+  color: var(--ink-soft);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.goal-progress-step strong {
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.goal-progress-step span {
+  font-size: 0.78rem;
+  line-height: 1.25;
+}
+
+.goal-progress-step.completed,
+.goal-progress-step.current {
+  border-color: rgba(11, 74, 111, 0.24);
+  background: rgba(11, 74, 111, 0.08);
+}
+
+.goal-progress-step.clickable {
+  cursor: pointer;
+  border-color: rgba(242, 159, 5, 0.55);
+  background: rgba(242, 159, 5, 0.18);
+  box-shadow: 0 10px 18px rgba(242, 159, 5, 0.18);
+}
+
+.goal-progress-step.clickable:hover {
+  transform: translateY(-2px);
+}
+
+.goal-progress-step:disabled {
+  opacity: 1;
 }
 
 .stage-hero {

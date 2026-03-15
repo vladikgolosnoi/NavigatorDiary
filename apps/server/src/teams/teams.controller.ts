@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common'
+import { Controller, Get, Param } from '@nestjs/common'
 import { Public } from '../auth/decorators/public.decorator'
 import { TeamsService } from './teams.service'
 import { Roles } from '../auth/decorators/roles.decorator'
@@ -18,5 +18,11 @@ export class TeamsController {
   @Get('pending')
   async listPending() {
     return this.teamsService.listPending()
+  }
+
+  @Roles(RoleName.ORGANIZER)
+  @Get(':teamId/users')
+  async listActiveMembers(@Param('teamId') teamId: string) {
+    return this.teamsService.listActiveMembers(teamId)
   }
 }

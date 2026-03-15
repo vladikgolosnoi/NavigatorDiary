@@ -1,13 +1,13 @@
-import { IsNotEmpty, IsString, MinLength } from 'class-validator'
+import { IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator'
 
 export class RegisterTeamDto {
   @IsString()
   @MinLength(2)
   name: string
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  city: string
+  city?: string
 
   @IsString()
   @IsNotEmpty()

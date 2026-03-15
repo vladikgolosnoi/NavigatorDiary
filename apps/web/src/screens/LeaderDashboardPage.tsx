@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react'
-import { BadgeRow } from '../components/BadgeRow'
 import { apiFetch, ApiError } from '../api/client'
 import { useAuth } from '../state/auth'
 
@@ -40,8 +39,10 @@ export function LeaderDashboardPage() {
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([])
   const [pendingGoals, setPendingGoals] = useState<PendingGoal[]>([])
   const [pendingSpecialties, setPendingSpecialties] = useState<PendingSpecialty[]>([])
+  const [teamDraft, setTeamDraft] = useState({ name: '', institution: '' })
   const [notice, setNotice] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
+  const [savingTeam, setSavingTeam] = useState(false)
 
   const loadDashboard = useCallback(() => {
     if (!auth.token) {
@@ -129,13 +130,47 @@ export function LeaderDashboardPage() {
     }
   }
 
+  const createTeam = async () => {
+    setNotice('')
+    setErrorMessage('')
+    if (teamDraft.name.trim().length < 2) {
+      setErrorMessage('Укажите название команды.')
+      return
+    }
+    if (teamDraft.institution.trim().length < 2) {
+      setErrorMessage('Укажите образовательное учреждение.')
+      return
+    }
+
+    try {
+      setSavingTeam(true)
+      await apiFetch(
+        '/auth/register-team',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            name: teamDraft.name.trim(),
+            institution: teamDraft.institution.trim()
+          })
+        },
+        auth.token
+      )
+      setTeamDraft({ name: '', institution: '' })
+      setNotice('Заявка на новую команду отправлена организатору.')
+    } catch (error) {
+      const apiError = error as ApiError
+      setErrorMessage(apiError.message || 'Не удалось создать заявку на команду')
+    } finally {
+      setSavingTeam(false)
+    }
+  }
+
   return (
     <section className="screen">
       <header className="screen-header">
         <div>
           <h1>Панель руководителя</h1>
           <p>Подтверждение участников, целей и специальностей команды.</p>
-          <BadgeRow items={['Подтверждения', 'Пользователи', 'Специальности']} />
         </div>
         <div className="screen-actions">
           <button className="btn primary" onClick={loadDashboard}>
@@ -173,7 +208,7 @@ export function LeaderDashboardPage() {
             <p>Нет пользователей на подтверждение.</p>
           )}
         </article>
-        <article className="card">
+        <article className="card" id="leader-goals">
           <h3>Цели на подтверждение</h3>
           {pendingGoals.length ? (
             <div className="stack-list">
@@ -195,7 +230,39 @@ export function LeaderDashboardPage() {
             <p>Нет целей для подтверждения.</p>
           )}
         </article>
-        <article className="card" id="leader-specialties">
+        <article className="card" id="leader-create-team">
+          <h3>Создать команду</h3>
+          <p>Новая команда уйдёт организатору на подтверждение.</p>
+          <label className="field">
+            Название команды
+            <input
+              className="input"
+              value={teamDraft.name}
+              onChange={(event) => setTeamDraft((prev) => ({ ...prev, name: event.target.value }))}
+              placeholder="Например, Дружина Ростова"
+            />
+          </label>
+          <label className="field">
+            Образовательное учреждение
+            <input
+              className="input"
+              value={teamDraft.institution}
+              onChange={(event) =>
+                setTeamDraft((prev) => ({ ...prev, institution: event.target.value }))
+              }
+              placeholder="Например, школа № 12"
+            />
+          </label>
+          <button
+            className="btn primary"
+            type="button"
+            onClick={createTeam}
+            disabled={savingTeam}
+          >
+            Создать команду
+          </button>
+        </article>
+        <article className="card">
           <h3>Специальности (бронза)</h3>
           {pendingSpecialties.length ? (
             <div className="stack-list">

@@ -26,6 +26,7 @@ export type AuditAction =
   | 'ANNOUNCEMENT_DELETED'
   | 'NOTIFICATION_CREATED'
   | 'BRANCH_AWARD'
+  | 'BEAVER_RESOURCE_ADJUSTED'
 
 @Injectable()
 export class AuditService {

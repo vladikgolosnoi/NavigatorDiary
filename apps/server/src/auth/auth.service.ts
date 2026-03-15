@@ -27,7 +27,7 @@ export class AuthService {
     const team = await this.prisma.team.create({
       data: {
         name: dto.name,
-        city: dto.city,
+        city: dto.city?.trim() || 'Не указан',
         institution: dto.institution,
         status: TeamStatus.PENDING
       }

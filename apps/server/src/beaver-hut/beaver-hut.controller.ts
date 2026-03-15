@@ -4,6 +4,7 @@ import { Request } from 'express'
 import { AwardBranchesDto } from './dto/award-branches.dto'
 import { Roles } from '../auth/decorators/roles.decorator'
 import { RoleName } from '@prisma/client'
+import { AdjustResourceDto } from './dto/adjust-resource.dto'
 
 interface RequestWithUser extends Request {
   user: {
@@ -24,5 +25,11 @@ export class BeaverHutController {
   @Roles(RoleName.ORGANIZER)
   async awardBranches(@Req() req: RequestWithUser, @Body() dto: AwardBranchesDto) {
     return this.beaverHutService.awardBranches(req.user.userId, dto)
+  }
+
+  @Post('adjust')
+  @Roles(RoleName.ORGANIZER)
+  async adjustResource(@Req() req: RequestWithUser, @Body() dto: AdjustResourceDto) {
+    return this.beaverHutService.adjustResource(req.user.userId, dto)
   }
 }

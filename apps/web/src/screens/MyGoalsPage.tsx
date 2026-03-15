@@ -3,10 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { BadgeRow } from '../components/BadgeRow'
 import { apiFetch, ApiError } from '../api/client'
 import { useAuth } from '../state/auth'
-import progressSteps from '../assets/illustrations/progress-steps.png'
-import { scrollToSectionById } from '../utils/scroll'
 
 const weekMs = 7 * 24 * 60 * 60 * 1000
+const finalProgressStep = 4
 
 type GoalActivity = {
   id: string
@@ -82,25 +81,80 @@ export function MyGoalsPage() {
       .catch(() => undefined)
   }, [auth.token])
 
-  const markProgress = async (goalId: string) => {
+  const canMark = useMemo(() => {
+    return goals.reduce<Record<string, boolean>>((acc, goal) => {
+      if (!goal.lastProgressAt) {
+        acc[goal.id] = true
+      } else {
+        const diff = Date.now() - new Date(goal.lastProgressAt).getTime()
+        acc[goal.id] = diff >= weekMs
+      }
+      return acc
+    }, {})
+  }, [goals])
+
+  const nextMarkDate = useMemo(() => {
+    return goals.reduce<Record<string, string | null>>((acc, goal) => {
+      if (!goal.lastProgressAt) {
+        acc[goal.id] = null
+      } else {
+        const next = new Date(new Date(goal.lastProgressAt).getTime() + weekMs)
+        acc[goal.id] = next.toLocaleDateString()
+      }
+      return acc
+    }, {})
+  }, [goals])
+
+  const getProgressStep = (goal: UserGoal) => {
+    if (goal.status === 'ACHIEVED' || goal.status === 'PENDING_CONFIRMATION') {
+      return finalProgressStep
+    }
+    return Math.min(goal.progressCount ?? 0, finalProgressStep)
+  }
+
+  const markProgress = async (goal: UserGoal) => {
     if (!auth.token) {
       setErrorMessage('Для отметки прогресса требуется вход.')
       return
     }
+
+    const currentStep = getProgressStep(goal)
+    const nextStep = currentStep + 1
+
+    if (nextStep > finalProgressStep) {
+      setNotice('Для этой цели прогресс уже отмечен полностью.')
+      return
+    }
+
     setNotice('')
     setErrorMessage('')
+
     try {
-      await apiFetch(`/goals/${goalId}/progress`, { method: 'POST', body: JSON.stringify({}) }, auth.token)
-      setNotice('Прогресс сохранен!')
+      await apiFetch(
+        `/goals/${goal.id}/progress`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ step: nextStep })
+        },
+        auth.token
+      )
+
+      const nextStatus = nextStep >= finalProgressStep ? 'PENDING_CONFIRMATION' : 'IN_PROGRESS'
+      setNotice(
+        nextStep >= finalProgressStep
+          ? 'Цель отмечена как достигнутая. Теперь команда может поддержать её реакциями.'
+          : 'Прогресс сохранён.'
+      )
       setGoals((prev) =>
-        prev.map((goal) =>
-          goal.id === goalId
+        prev.map((item) =>
+          item.id === goal.id
             ? {
-                ...goal,
-                status: goal.status === 'SELECTED' ? 'IN_PROGRESS' : goal.status,
+                ...item,
+                status: nextStatus,
+                progressCount: nextStep,
                 lastProgressAt: new Date().toISOString()
               }
-            : goal
+            : item
         )
       )
     } catch (error) {
@@ -118,57 +172,20 @@ export function MyGoalsPage() {
     setErrorMessage('')
     try {
       const comment = commentDrafts[goalId] ?? ''
-      await apiFetch(`/goals/${goalId}/comment`, {
-        method: 'PATCH',
-        body: JSON.stringify({ comment })
-      }, auth.token)
-      setNotice('Комментарий сохранен.')
+      await apiFetch(
+        `/goals/${goalId}/comment`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({ comment })
+        },
+        auth.token
+      )
+      setNotice('Комментарий сохранён.')
       setGoals((prev) => prev.map((goal) => (goal.id === goalId ? { ...goal, comment } : goal)))
     } catch (error) {
       const apiError = error as ApiError
       setErrorMessage(apiError.message || 'Не удалось сохранить комментарий')
     }
-  }
-
-  const canMark = useMemo(() => {
-    return goals.reduce<Record<string, boolean>>((acc, goal) => {
-      if (!goal.lastProgressAt) {
-        acc[goal.id] = true
-      } else {
-        const diff = Date.now() - new Date(goal.lastProgressAt).getTime()
-        acc[goal.id] = diff >= weekMs
-      }
-      return acc
-    }, {})
-  }, [goals])
-
-  const getProgressStep = (goal: UserGoal) => {
-    if (goal.status === 'ACHIEVED') {
-      return progressLabels.length - 1
-    }
-    const count = goal.progressCount ?? 0
-    return Math.min(count, progressLabels.length - 1)
-  }
-
-  const nextMarkDate = useMemo(() => {
-    return goals.reduce<Record<string, string | null>>((acc, goal) => {
-      if (!goal.lastProgressAt) {
-        acc[goal.id] = null
-      } else {
-        const next = new Date(new Date(goal.lastProgressAt).getTime() + weekMs)
-        acc[goal.id] = next.toLocaleDateString()
-      }
-      return acc
-    }, {})
-  }, [goals])
-
-  const focusProgress = () => {
-    if (goals.length === 0) {
-      setNotice('Пока нет целей. Выберите их в каталоге.')
-      return
-    }
-    setNotice('Выберите цель ниже и нажмите «Отметить прогресс».')
-    scrollToSectionById('goals-list')
   }
 
   const supportGoal = async (goalId: string) => {
@@ -191,7 +208,7 @@ export function MyGoalsPage() {
             : goal
         )
       )
-      setNotice('Реакция отправлена. Спасибо за поддержку!')
+      setNotice('Реакция отправлена.')
     } catch (error) {
       const apiError = error as ApiError
       setErrorMessage(apiError.message || 'Не удалось поставить реакцию')
@@ -203,14 +220,11 @@ export function MyGoalsPage() {
       <header className="screen-header">
         <div>
           <h1>Мои цели</h1>
-          <p>Отмечайте прогресс по целям не чаще одного раза в неделю.</p>
+          <p>Выбранные цели появляются здесь. Следующий шаг по каждой цели доступен раз в неделю.</p>
           <BadgeRow items={['Список', 'Прогресс', 'Комментарии']} />
         </div>
         <div className="screen-actions">
-          <button className="btn primary" onClick={focusProgress}>
-            Добавить прогресс
-          </button>
-          <button className="btn ghost" onClick={() => navigate('/goals/catalog')}>
+          <button className="btn primary" onClick={() => navigate('/goals/catalog')}>
             Открыть каталог
           </button>
         </div>
@@ -221,17 +235,16 @@ export function MyGoalsPage() {
 
       <div className="state-grid">
         <article className="card highlight" id="goals-progress">
-          <h3>Прогресс</h3>
-          <p>Отмечайте следующий уровень не чаще одного раза в неделю.</p>
-          <img className="progress-illustration" src={progressSteps} alt="Шкала прогресса целей" />
+          <h3>Как работает прогресс</h3>
+          <p>Нажимайте следующий шаг на шкале. Новый шаг открывается через 1 неделю.</p>
           <div className="card-footer">
             <span className="pill">1 раз в неделю</span>
-            <span className="pill accent">Шкала прогресса</span>
+            <span className="pill accent">Кликабельная шкала</span>
           </div>
         </article>
         <article className="card" id="goals-comments">
           <h3>Комментарии</h3>
-          <p>Добавляйте заметки и планы действий — они сохраняются в каждой цели.</p>
+          <p>Для каждой цели можно сохранить собственную заметку или план действий.</p>
           <div className="card-footer">
             <span className="pill">Заметки</span>
           </div>
@@ -242,7 +255,7 @@ export function MyGoalsPage() {
         <div className="card-grid">
           <article className="card">
             <h3>Поддержка целей команды</h3>
-            <p>Поддержите цели других навигаторов — нужно минимум 5 голосов.</p>
+            <p>Здесь появляются цели, которые другие навигаторы уже отметили как достигнутые.</p>
             <div className="stack-list">
               {teamGoals.map((goal) => (
                 <div key={goal.id} className="stack-item">
@@ -253,11 +266,7 @@ export function MyGoalsPage() {
                     </p>
                   </div>
                   <div className="stack-actions">
-                    <button
-                      className="btn ghost"
-                      onClick={() => supportGoal(goal.id)}
-                      disabled={goal.reacted}
-                    >
+                    <button className="btn ghost" onClick={() => supportGoal(goal.id)} disabled={goal.reacted}>
                       {goal.reacted ? 'Голос принят' : 'Поддержать'}
                     </button>
                   </div>
@@ -268,57 +277,100 @@ export function MyGoalsPage() {
         </div>
       ) : null}
 
-      <div className="card-grid" id="goals-list">
-        {goals.map((goal) => (
-          <article key={goal.id} className="card">
-            <h3>{goal.goal.name}</h3>
-            <p>Статус: {statusMap[goal.status] ?? goal.status}</p>
-            <p>Уровень прогресса: {progressLabels[getProgressStep(goal)]}</p>
-            <p>
-              Последняя отметка:{' '}
-              {goal.lastProgressAt ? new Date(goal.lastProgressAt).toLocaleDateString() : 'нет данных'}
-            </p>
-            {!canMark[goal.id] && nextMarkDate[goal.id] ? (
-              <p>Следующая отметка: {nextMarkDate[goal.id]}</p>
-            ) : null}
-            <div className="card-footer">
-              <span className="pill">Активности</span>
-              <span className="pill accent">1 раз в неделю</span>
-            </div>
-            <p className="hint">
-              Здесь ты можешь найти идеи для активностей, которые помогут достигнуть цели.
-            </p>
-            <div className="link-list">
-              {goal.goal.activities.map((activity) => (
-                <a key={activity.id} href={activity.url} target="_blank" rel="noreferrer">
-                  {activity.title}
-                </a>
-              ))}
-            </div>
-            <div className="comment-box">
-              <label>Комментарий к цели</label>
-              <textarea
-                value={commentDrafts[goal.id] ?? ''}
-                onChange={(event) =>
-                  setCommentDrafts((prev) => ({ ...prev, [goal.id]: event.target.value }))
-                }
-                placeholder="Добавьте заметку или план действий"
-              />
-              <button className="btn ghost" type="button" onClick={() => saveComment(goal.id)}>
-                Сохранить комментарий
-              </button>
-            </div>
-            <button
-              className="btn ghost"
-              onClick={() => markProgress(goal.id)}
-              type="button"
-              disabled={!canMark[goal.id]}
-            >
-              Отметить прогресс
-            </button>
-          </article>
-        ))}
-      </div>
+      {goals.length === 0 ? (
+        <article className="card" id="goals-list">
+          <h3>Пока нет выбранных целей</h3>
+          <p>Откройте каталог, выберите цели и сохраните их — после этого они появятся здесь.</p>
+          <button className="btn primary" type="button" onClick={() => navigate('/goals/catalog')}>
+            Перейти в каталог целей
+          </button>
+        </article>
+      ) : (
+        <div className="card-grid" id="goals-list">
+          {goals.map((goal) => {
+            const currentStep = getProgressStep(goal)
+            const nextStep = currentStep + 1
+            const canAdvance =
+              goal.status !== 'ACHIEVED' &&
+              goal.status !== 'PENDING_CONFIRMATION' &&
+              currentStep < finalProgressStep &&
+              canMark[goal.id]
+
+            return (
+              <article key={goal.id} className="card">
+                <h3>{goal.goal.name}</h3>
+                <p>Статус: {statusMap[goal.status] ?? goal.status}</p>
+                <p>Текущий уровень: {progressLabels[currentStep]}</p>
+                <p>
+                  Последняя отметка:{' '}
+                  {goal.lastProgressAt ? new Date(goal.lastProgressAt).toLocaleDateString() : 'нет данных'}
+                </p>
+                {!canMark[goal.id] && nextMarkDate[goal.id] ? (
+                  <p>Следующий шаг станет доступен: {nextMarkDate[goal.id]}</p>
+                ) : null}
+
+                <div className="goal-progress-scale" aria-label={`Шкала прогресса для цели ${goal.goal.name}`}>
+                  {progressLabels.map((label, index) => {
+                    const isCurrent = index === currentStep
+                    const isCompleted = index < currentStep
+                    const isClickable = index === nextStep && canAdvance
+                    return (
+                      <button
+                        key={label}
+                        type="button"
+                        className={`goal-progress-step${isCompleted ? ' completed' : ''}${isCurrent ? ' current' : ''}${isClickable ? ' clickable' : ''}`}
+                        onClick={() => markProgress(goal)}
+                        disabled={!isClickable}
+                      >
+                        <strong>{index + 1}</strong>
+                        <span>{label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                <div className="card-footer">
+                  <span className="pill">Активности</span>
+                  <span className="pill accent">1 раз в неделю</span>
+                </div>
+                <p className="hint">
+                  Здесь ты можешь найти идеи для активностей, которые помогут достигнуть цели.
+                </p>
+                <div className="link-list">
+                  {goal.goal.activities.map((activity) => (
+                    <a key={activity.id} href={activity.url} target="_blank" rel="noreferrer">
+                      {activity.title}
+                    </a>
+                  ))}
+                </div>
+
+                <div className="comment-box">
+                  <label>Комментарий к цели</label>
+                  <textarea
+                    value={commentDrafts[goal.id] ?? ''}
+                    onChange={(event) =>
+                      setCommentDrafts((prev) => ({ ...prev, [goal.id]: event.target.value }))
+                    }
+                    placeholder="Добавьте заметку или план действий"
+                  />
+                  <button className="btn ghost" type="button" onClick={() => saveComment(goal.id)}>
+                    Сохранить комментарий
+                  </button>
+                </div>
+
+                <button
+                  className="btn primary"
+                  type="button"
+                  onClick={() => markProgress(goal)}
+                  disabled={!canAdvance}
+                >
+                  Добавить прогресс
+                </button>
+              </article>
+            )
+          })}
+        </div>
+      )}
     </section>
   )
 }
