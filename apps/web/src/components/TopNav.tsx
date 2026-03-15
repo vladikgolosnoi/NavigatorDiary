@@ -19,6 +19,7 @@ export function TopNav() {
     ? `${auth.user.firstName} ${auth.user.lastName}`.trim()
     : ''
   const [compact, setCompact] = useState(false)
+  const displayName = compact && auth.user ? auth.user.firstName : userLabel
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
@@ -61,7 +62,7 @@ export function TopNav() {
         {auth.user ? (
           <>
             <button type="button" className="role-chip role-chip-button" onClick={() => navigate('/profile')}>
-              <span>{userLabel}</span>
+              <span>{displayName}</span>
               <small>{roleLabels[auth.user.role] ?? auth.user.role}</small>
             </button>
             <button type="button" className="role-link" onClick={signOut}>

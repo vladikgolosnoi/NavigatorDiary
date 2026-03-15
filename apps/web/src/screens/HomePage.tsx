@@ -17,9 +17,9 @@ export function HomePage() {
   const showSphereLinks = auth.user?.role === 'LEADER' || auth.user?.role === 'NAVIGATOR'
 
   return (
-    <section className="screen">
-      <header className="screen-header">
-        <div>
+    <section className="screen home-screen">
+      <div className="home-hero" id="home-welcome">
+        <div className="home-copy">
           <h1>Главная</h1>
           <p>
             Приветствуем вас в движении &laquo;Дружина навигаторов&raquo;. Участвовать легко,
@@ -28,15 +28,17 @@ export function HomePage() {
             приобретая полезные навыки и просто веселясь. Активности можно выбрать по сферам
             развития, исходя из интересов навигаторов.
           </p>
+          {showSphereLinks ? (
+            <p className="home-note">Нажмите на значок сферы, чтобы открыть подборку активностей.</p>
+          ) : null}
         </div>
-      </header>
-
-      <div id="home-welcome">
+        <div className="home-brand">
         <LogoCluster
           showIcons={showSphereLinks}
           sphereLinks={showSphereLinks ? sphereLinks : undefined}
           mainLink={projectLink}
         />
+        </div>
       </div>
     </section>
   )
