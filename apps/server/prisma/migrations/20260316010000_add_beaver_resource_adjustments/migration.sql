@@ -1,6 +1,10 @@
-CREATE TYPE "BeaverResourceType" AS ENUM ('ACORN', 'TWIG', 'LOG');
+DO $$ BEGIN
+  CREATE TYPE "BeaverResourceType" AS ENUM ('ACORN', 'TWIG', 'LOG');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE TABLE "BeaverResourceAdjustment" (
+CREATE TABLE IF NOT EXISTS "BeaverResourceAdjustment" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "organizerId" TEXT NOT NULL,
@@ -12,13 +16,21 @@ CREATE TABLE "BeaverResourceAdjustment" (
     CONSTRAINT "BeaverResourceAdjustment_pkey" PRIMARY KEY ("id")
 );
 
-CREATE INDEX "BeaverResourceAdjustment_userId_resourceType_idx"
+CREATE INDEX IF NOT EXISTS "BeaverResourceAdjustment_userId_resourceType_idx"
 ON "BeaverResourceAdjustment"("userId", "resourceType");
 
-ALTER TABLE "BeaverResourceAdjustment"
-ADD CONSTRAINT "BeaverResourceAdjustment_userId_fkey"
-FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "BeaverResourceAdjustment"
+  ADD CONSTRAINT "BeaverResourceAdjustment_userId_fkey"
+  FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
-ALTER TABLE "BeaverResourceAdjustment"
-ADD CONSTRAINT "BeaverResourceAdjustment_organizerId_fkey"
-FOREIGN KEY ("organizerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "BeaverResourceAdjustment"
+  ADD CONSTRAINT "BeaverResourceAdjustment_organizerId_fkey"
+  FOREIGN KEY ("organizerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
