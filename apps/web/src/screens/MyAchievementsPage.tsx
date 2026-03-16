@@ -139,13 +139,17 @@ export function MyAchievementsPage() {
         </article>
         <article className="card" id="achievements-specialties">
           <h3>Специальности</h3>
-          <div className="tag-list">
-            {achievement.specialties.map((spec) => (
-              <span key={spec.id} className="tag">
-                {spec.specialty} · {levelMap[spec.level] ?? spec.level}
-              </span>
-            ))}
-          </div>
+          {achievement.specialties.length ? (
+            <div className="tag-list">
+              {achievement.specialties.map((spec) => (
+                <span key={spec.id} className="tag">
+                  {spec.specialty} · {levelMap[spec.level] ?? spec.level}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p>Пока нет подтверждённых специальностей.</p>
+          )}
         </article>
       </div>
     </section>

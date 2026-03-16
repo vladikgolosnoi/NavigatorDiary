@@ -6,6 +6,10 @@ export function MobileBottomNav() {
   const location = useLocation()
   const { auth } = useAuth()
 
+  if (!auth.token) {
+    return null
+  }
+
   const items = getVisibleTopNavItems(auth.user?.role ?? null, Boolean(auth.token)).slice(0, 6)
   if (items.length === 0) {
     return null

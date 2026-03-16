@@ -21,6 +21,12 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   background:
@@ -39,6 +45,13 @@ a {
 img {
   max-width: 100%;
   display: block;
+}
+
+input,
+textarea,
+select,
+button {
+  max-width: 100%;
 }
 
 .app-shell {
@@ -114,6 +127,7 @@ img {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 
 .brand-mark {
@@ -139,6 +153,7 @@ img {
   font-weight: 700;
   font-size: 1.1rem;
   letter-spacing: 0.01em;
+  line-height: 1.05;
 }
 
 .brand-text small {
@@ -155,6 +170,7 @@ img {
   padding-bottom: 4px;
   scroll-snap-type: x proximity;
   scrollbar-width: none;
+  min-width: 0;
 }
 
 .top-nav-links::-webkit-scrollbar {
@@ -188,6 +204,7 @@ img {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+  min-width: 0;
 }
 
 .mobile-bottom-nav {
@@ -205,6 +222,7 @@ img {
   color: var(--primary);
   font-weight: 700;
   box-shadow: var(--shadow-soft);
+  flex-shrink: 0;
 }
 
 .role-chip {
@@ -312,6 +330,16 @@ img {
     var(--card);
   border: 1px solid rgba(255, 255, 255, 0.72);
   box-shadow: var(--shadow);
+}
+
+.screen-header > div,
+.card,
+.form-card,
+.stack-item,
+.notification-item,
+.home-copy,
+.home-brand {
+  min-width: 0;
 }
 
 .screen-header h1 {
@@ -520,6 +548,7 @@ img {
 .link-list a {
   color: var(--primary);
   font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 .comment-box {
@@ -666,6 +695,7 @@ img {
   justify-content: space-between;
   gap: 12px;
   color: var(--ink-soft);
+  align-items: flex-start;
 }
 
 .note-input {
@@ -1313,6 +1343,7 @@ img {
     font-size: 0.72rem;
     font-weight: 700;
     line-height: 1.1;
+    min-width: 0;
   }
 
   .mobile-nav-link.active {
@@ -1397,6 +1428,13 @@ img {
     padding: 8px 10px;
   }
 
+  .role-chip span {
+    max-width: 78px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .role-chip small {
     font-size: 0.7rem;
   }
@@ -1436,6 +1474,13 @@ img {
   .form-card {
     padding: 16px;
     border-radius: 20px;
+  }
+
+  .notification-item,
+  .stack-item,
+  .card,
+  .form-card {
+    overflow: hidden;
   }
 
   .logo-cluster {

@@ -88,8 +88,25 @@ export function MySpecialtiesPage() {
             <p>Активная специальность пока не выбрана.</p>
             <BadgeRow items={['Чек-лист', 'Материалы', 'Статусы']} />
           </div>
+          <div className="screen-actions">
+            <button className="btn primary" onClick={() => navigate('/specialties/catalog')}>
+              Открыть каталог
+            </button>
+          </div>
         </header>
         {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
+        <div className="state-grid">
+          <article className="card highlight">
+            <h3>Выберите специальность</h3>
+            <p>
+              Откройте каталог, выберите одну специальность и уровень. После этого здесь появятся
+              чек-лист, материалы и статус подтверждения.
+            </p>
+            <button className="btn primary" type="button" onClick={() => navigate('/specialties/catalog')}>
+              Перейти в каталог специальностей
+            </button>
+          </article>
+        </div>
       </section>
     )
   }

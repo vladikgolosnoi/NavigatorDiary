@@ -16,7 +16,7 @@ export type SubMenuItem = {
 }
 
 export const topNavItems: TopNavItem[] = [
-  { label: 'Главная', path: '/home', match: ['/home'] },
+  { label: 'Главная', shortLabel: 'Главная', path: '/home', match: ['/home'] },
   {
     label: 'Мои цели',
     shortLabel: 'Цели',
@@ -27,7 +27,7 @@ export const topNavItems: TopNavItem[] = [
   },
   {
     label: 'Мои специальности',
-    shortLabel: 'Спец.',
+    shortLabel: 'Спец',
     path: '/specialties/my',
     match: ['/specialties'],
     requiresAuth: true,
@@ -35,7 +35,7 @@ export const topNavItems: TopNavItem[] = [
   },
   {
     label: 'Мои достижения',
-    shortLabel: 'Достижения',
+    shortLabel: 'Рост',
     path: '/achievements',
     match: ['/achievements'],
     requiresAuth: true,
@@ -43,7 +43,7 @@ export const topNavItems: TopNavItem[] = [
   },
   {
     label: 'Хатка бобра',
-    shortLabel: 'Хатка',
+    shortLabel: 'Бобр',
     path: '/beaver-hut',
     match: ['/beaver-hut'],
     requiresAuth: true,
@@ -80,7 +80,7 @@ export const topNavItems: TopNavItem[] = [
   },
   {
     label: 'Дополнительно',
-    shortLabel: 'Доп.',
+    shortLabel: 'Ещё',
     path: '/extra',
     match: ['/extra']
   }
