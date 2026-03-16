@@ -1143,6 +1143,13 @@ button {
   margin-top: 0;
 }
 
+.card h2 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 1.4rem;
+  line-height: 1.1;
+}
+
 .score-value {
   font-size: 2.2rem;
   font-weight: 700;

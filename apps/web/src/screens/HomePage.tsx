@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+import { apiFetch } from '../api/client'
 import { LogoCluster } from '../components/LogoCluster'
 import { useAuth } from '../state/auth'
 
@@ -12,9 +14,29 @@ const sphereLinks = {
 
 const projectLink = 'https://rsdmo.ru/page77671096.html'
 
+type Announcement = {
+  id: string
+  title: string
+  body: string
+  createdAt?: string
+  publishedAt?: string
+}
+
 export function HomePage() {
   const { auth } = useAuth()
   const showSphereLinks = auth.user?.role === 'LEADER' || auth.user?.role === 'NAVIGATOR'
+  const [announcements, setAnnouncements] = useState<Announcement[]>([])
+
+  useEffect(() => {
+    if (!showSphereLinks) {
+      setAnnouncements([])
+      return
+    }
+
+    apiFetch<Announcement[]>('/announcements/public')
+      .then((items) => setAnnouncements(items.slice(0, 3)))
+      .catch(() => setAnnouncements([]))
+  }, [showSphereLinks])
 
   return (
     <section className="screen home-screen">
@@ -33,13 +55,48 @@ export function HomePage() {
           ) : null}
         </div>
         <div className="home-brand">
-        <LogoCluster
-          showIcons={showSphereLinks}
-          sphereLinks={showSphereLinks ? sphereLinks : undefined}
-          mainLink={projectLink}
-        />
+          <LogoCluster
+            showIcons={showSphereLinks}
+            sphereLinks={showSphereLinks ? sphereLinks : undefined}
+            mainLink={projectLink}
+          />
         </div>
       </div>
+
+      {showSphereLinks ? (
+        <div className="card-grid" id="home-announcements">
+          <article className="card highlight">
+            <h2>Анонсы мероприятий</h2>
+            <p>
+              Здесь отображаются последние объявления организаторов для навигаторов и
+              руководителей команд.
+            </p>
+            <div className="card-footer">
+              <span className="pill">Команды</span>
+              <span className="pill accent">События проекта</span>
+            </div>
+          </article>
+
+          {announcements.length ? (
+            announcements.map((item) => (
+              <article key={item.id} className="card">
+                <h3>{item.title}</h3>
+                <p>{item.body}</p>
+                <div className="card-footer">
+                  <span className="pill">
+                    {new Date(item.publishedAt ?? item.createdAt ?? Date.now()).toLocaleDateString('ru-RU')}
+                  </span>
+                </div>
+              </article>
+            ))
+          ) : (
+            <article className="card">
+              <h3>Пока нет новых анонсов</h3>
+              <p>Когда организатор опубликует мероприятие, оно появится здесь.</p>
+            </article>
+          )}
+        </div>
+      ) : null}
     </section>
   )
 }
