@@ -16,7 +16,7 @@ export type SubMenuItem = {
 }
 
 export const topNavItems: TopNavItem[] = [
-  { label: 'Главная', shortLabel: 'Главная', path: '/home', match: ['/home'] },
+  { label: 'Главная', shortLabel: 'Дом', path: '/home', match: ['/home'] },
   {
     label: 'Мои цели',
     shortLabel: 'Цели',

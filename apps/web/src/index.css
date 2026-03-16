@@ -25,6 +25,8 @@ html,
 body {
   max-width: 100%;
   overflow-x: hidden;
+  overscroll-behavior-x: none;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -35,6 +37,7 @@ body {
     linear-gradient(180deg, #fff5e5 0%, var(--bg) 48%, #f3ede3 100%);
   color: var(--ink);
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 a {
@@ -56,6 +59,7 @@ button {
 
 .app-shell {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -171,6 +175,7 @@ button {
   scroll-snap-type: x proximity;
   scrollbar-width: none;
   min-width: 0;
+  overscroll-behavior-inline: contain;
 }
 
 .top-nav-links::-webkit-scrollbar {
@@ -262,6 +267,7 @@ button {
   margin: 0 auto;
   scroll-snap-type: x proximity;
   scrollbar-width: none;
+  overscroll-behavior-inline: contain;
 }
 
 .sub-nav::-webkit-scrollbar {
@@ -830,6 +836,7 @@ button {
   padding-bottom: 4px;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-inline: contain;
 }
 
 .goal-progress-scale::-webkit-scrollbar {
@@ -1285,10 +1292,14 @@ button {
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 860px) {
   .top-nav {
     grid-template-columns: 1fr auto;
     grid-template-areas: "brand role";
+  }
+
+  .role-nav {
+    justify-content: flex-end;
   }
 
   .top-nav-links {
@@ -1300,18 +1311,7 @@ button {
   }
 
   .main-content {
-    padding-bottom: calc(92px + env(safe-area-inset-bottom));
-  }
-
-  .role-chip span {
-    max-width: 120px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .role-link {
-    padding: 6px 10px;
+    padding-bottom: calc(104px + env(safe-area-inset-bottom));
   }
 
   .mobile-bottom-nav {
@@ -1370,6 +1370,20 @@ button {
   }
 }
 
+@media (max-width: 760px) {
+
+  .role-chip span {
+    max-width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .role-link {
+    padding: 6px 10px;
+  }
+}
+
 @media (max-width: 600px) {
   body {
     font-size: 15px;
@@ -1390,12 +1404,12 @@ button {
   }
 
   .brand-text span {
-    font-size: 1rem;
+    font-size: 1.06rem;
   }
 
   .brand-mark {
-    width: 42px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
     border-radius: 12px;
   }
 
@@ -1525,14 +1539,16 @@ button {
   }
 
   .mobile-bottom-nav {
-    left: 10px;
-    right: 10px;
+    left: 8px;
+    right: 8px;
     bottom: 8px;
+    gap: 4px;
+    padding: 7px 6px calc(7px + env(safe-area-inset-bottom));
   }
 
   .mobile-nav-link {
-    padding: 8px 2px;
-    font-size: 0.66rem;
+    padding: 7px 2px;
+    font-size: 0.67rem;
   }
 
   .goal-progress-step {
@@ -1566,5 +1582,123 @@ button {
   .mascot-badge-card img {
     width: 70px;
     height: 70px;
+  }
+}
+
+@media (max-width: 460px) {
+  .top-nav {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "brand"
+      "role";
+    padding: calc(10px + env(safe-area-inset-top)) 14px 10px;
+  }
+
+  .brand {
+    gap: 8px;
+  }
+
+  .brand-mark {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+  }
+
+  .brand-text span {
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .role-nav {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .role-chip,
+  .role-link {
+    min-height: 40px;
+  }
+
+  .role-chip {
+    flex: 1 1 auto;
+    padding: 7px 10px;
+  }
+
+  .role-chip small {
+    display: none;
+  }
+
+  .role-link {
+    padding: 7px 10px;
+    font-size: 0.78rem;
+  }
+
+  .main-content {
+    padding: 16px 14px calc(136px + env(safe-area-inset-bottom));
+  }
+
+  .screen {
+    gap: 16px;
+  }
+
+  .screen-header,
+  .card,
+  .form-card {
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .screen-header h1,
+  .home-copy h1 {
+    font-size: 1.7rem;
+  }
+
+  .screen-header p,
+  .home-copy p {
+    font-size: 0.94rem;
+  }
+
+  .logo-cluster {
+    grid-template-columns: 1fr;
+  }
+
+  .logo-card.logo-main {
+    grid-column: auto;
+  }
+
+  .logo-card img {
+    max-width: 148px;
+  }
+
+  .logo-card.logo-main img {
+    max-width: 184px;
+  }
+
+  .goal-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .goal-item strong {
+    align-self: flex-end;
+  }
+
+  .mobile-bottom-nav {
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+    gap: 2px;
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+    border-radius: 20px;
+  }
+
+  .mobile-nav-link {
+    gap: 4px;
+    padding: 6px 2px;
+    font-size: 0.72rem;
+  }
+
+  .mobile-nav-indicator {
+    width: 18px;
   }
 }
