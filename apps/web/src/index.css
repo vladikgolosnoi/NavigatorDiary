@@ -1284,6 +1284,42 @@ button {
   font-weight: 700;
 }
 
+.specialty-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.specialty-detail-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.specialty-detail-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.specialty-detail-head p {
+  margin: 6px 0 0;
+  color: var(--ink-soft);
+}
+
+.specialty-inner-card {
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: none;
+  border: 1px dashed rgba(11, 74, 111, 0.12);
+}
+
+.specialty-inner-card h4 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+
 .pill.accent {
   background: rgba(242, 159, 5, 0.2);
   color: #5c3500;
@@ -1589,6 +1625,10 @@ button {
   .stack-item {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .specialty-detail-head {
+    flex-direction: column;
   }
 
   .stack-actions {

@@ -7,6 +7,8 @@ import { AuthUser } from '../goals/goals.types'
 import { ChatService } from '../chat/chat.service'
 import { AuditService } from '../audit/audit.service'
 
+const MAX_ACTIVE_SPECIALTIES = 3
+
 @Injectable()
 export class SpecialtiesService {
   constructor(
@@ -16,7 +18,7 @@ export class SpecialtiesService {
   ) {}
 
   async getMySpecialty(userId: string) {
-    const active = await this.prisma.userSpecialty.findFirst({
+    const active = await this.prisma.userSpecialty.findMany({
       where: { userId, status: SpecialtyStatus.ACTIVE },
       include: {
         specialty: {
@@ -32,37 +34,41 @@ export class SpecialtiesService {
           }
         },
         checklist: true
-      }
+      },
+      orderBy: { startedAt: 'desc' }
     })
 
-    if (!active) {
-      return null
-    }
+    return active.map((item) => {
+      const checkedIds = new Set(item.checklist.map((checklistItem) => checklistItem.checklistItemId))
 
-    const checkedIds = new Set(active.checklist.map((item) => item.checklistItemId))
-
-    return {
-      id: active.id,
-      status: active.status,
-      startedAt: active.startedAt,
-      completedAt: active.completedAt,
-      confirmedAt: active.confirmedAt,
-      specialty: active.specialty,
-      level: active.level,
-      checklistProgress: active.level.checklist.map((item) => ({
-        ...item,
-        checked: checkedIds.has(item.id)
-      }))
-    }
+      return {
+        id: item.id,
+        status: item.status,
+        startedAt: item.startedAt,
+        completedAt: item.completedAt,
+        confirmedAt: item.confirmedAt,
+        specialty: item.specialty,
+        level: item.level,
+        checklistProgress: item.level.checklist.map((checklistItem) => ({
+          ...checklistItem,
+          checked: checkedIds.has(checklistItem.id)
+        }))
+      }
+    })
   }
 
   async selectSpecialty(userId: string, dto: SelectSpecialtyDto) {
-    const existing = await this.prisma.userSpecialty.findFirst({
+    const activeSpecialties = await this.prisma.userSpecialty.findMany({
       where: { userId, status: SpecialtyStatus.ACTIVE }
     })
 
-    if (existing) {
-      throw new BadRequestException('У вас уже есть активная специальность')
+    if (activeSpecialties.length >= MAX_ACTIVE_SPECIALTIES) {
+      throw new BadRequestException('Можно иметь не более трёх активных специальностей')
+    }
+
+    const duplicateSpecialty = activeSpecialties.find((item) => item.specialtyId === dto.specialtyId)
+    if (duplicateSpecialty) {
+      throw new BadRequestException('Эта специальность уже активна')
     }
 
     const specialty = await this.prisma.specialty.findUnique({

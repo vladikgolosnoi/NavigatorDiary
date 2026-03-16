@@ -34,6 +34,13 @@ type Specialty = {
   levels: SpecialtyLevel[]
 }
 
+type ActiveSpecialty = {
+  id: string
+  status: string
+  specialty: { id: string; name: string }
+  level: { name: 'BRONZE' | 'SILVER' | 'GOLD' }
+}
+
 export function SpecialtiesCatalogPage() {
   const { auth } = useAuth()
   const navigate = useNavigate()
@@ -44,7 +51,7 @@ export function SpecialtiesCatalogPage() {
   const [selectedLevelId, setSelectedLevelId] = useState<string>('')
   const [notice, setNotice] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
-  const [hasActiveSpecialty, setHasActiveSpecialty] = useState(false)
+  const [activeSpecialties, setActiveSpecialties] = useState<ActiveSpecialty[]>([])
 
   useEffect(() => {
     apiFetch<Area[]>('/catalogs/areas', {}, auth.token)
@@ -80,12 +87,12 @@ export function SpecialtiesCatalogPage() {
     if (!auth.token) {
       return
     }
-    apiFetch('/specialties/my', {}, auth.token)
+    apiFetch<ActiveSpecialty[]>('/specialties/my', {}, auth.token)
       .then((data) => {
-        setHasActiveSpecialty(Boolean(data))
+        setActiveSpecialties(data)
       })
       .catch(() => {
-        setHasActiveSpecialty(false)
+        setActiveSpecialties([])
       })
   }, [auth.token])
 
@@ -103,8 +110,12 @@ export function SpecialtiesCatalogPage() {
       setErrorMessage('Для выбора специальности требуется вход.')
       return
     }
-    if (hasActiveSpecialty) {
-      setNotice('Можно иметь только одну активную специальность.')
+    if (activeSpecialties.length >= 3) {
+      setNotice('Можно иметь не более трёх активных специальностей.')
+      return
+    }
+    if (activeSpecialties.some((item) => item.specialty.id === activeSpecialty?.id)) {
+      setNotice('Эта специальность уже выбрана.')
       return
     }
     if (!activeSpecialty || !selectedLevelId) {
@@ -123,8 +134,9 @@ export function SpecialtiesCatalogPage() {
         },
         auth.token
       )
-      setHasActiveSpecialty(true)
-      setNotice('Специальность выбрана. Переходите к чек-листу.')
+      const updated = await apiFetch<ActiveSpecialty[]>('/specialties/my', {}, auth.token)
+      setActiveSpecialties(updated)
+      setNotice('Специальность добавлена. Переходите к чек-листам.')
     } catch (error) {
       const apiError = error as ApiError
       setErrorMessage(apiError.message || 'Не удалось выбрать специальность')
@@ -139,12 +151,14 @@ export function SpecialtiesCatalogPage() {
     return `${activeSpecialty.name} (${level ? levelMap[level.name] : ''})`
   }, [activeSpecialty, selectedLevelId])
 
+  const activeLabels = activeSpecialties.map((item) => `${item.specialty.name} · ${levelMap[item.level.name]}`)
+
   return (
     <section className="screen">
       <header className="screen-header">
         <div>
           <h1>Каталог специальностей</h1>
-          <p>Выберите область, специальность и уровень. Активна только одна специальность.</p>
+          <p>Выберите область, специальность и уровень. Одновременно можно вести до трёх специальностей.</p>
           <BadgeRow items={['Область', 'Видео', 'Специальность', 'Уровень']} />
         </div>
         <div className="screen-actions">
@@ -152,7 +166,7 @@ export function SpecialtiesCatalogPage() {
             Выбрать специальность
           </button>
           <button className="btn ghost" type="button" onClick={() => navigate('/specialties/my')}>
-            Моя специальность
+            Мои специальности
           </button>
         </div>
       </header>
@@ -239,9 +253,18 @@ export function SpecialtiesCatalogPage() {
         <article className="card highlight">
           <h3>Мой выбор</h3>
           <p>{selectedLabel}</p>
-          <p>Статус: {hasActiveSpecialty ? 'Активна' : 'Не выбрана'}</p>
+          <p>Активно специальностей: {activeSpecialties.length} / 3</p>
+          {activeLabels.length ? (
+            <div className="tag-list">
+              {activeLabels.map((label) => (
+                <span key={label} className="tag">
+                  {label}
+                </span>
+              ))}
+            </div>
+          ) : null}
           <div className="card-footer">
-            <span className="pill">Одна специальность</span>
+            <span className="pill">До 3 активных</span>
             <span className="pill accent">Чек-лист</span>
           </div>
         </article>
