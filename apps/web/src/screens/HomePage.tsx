@@ -54,13 +54,6 @@ export function HomePage() {
             <p className="home-note">Нажмите на значок сферы, чтобы открыть подборку активностей.</p>
           ) : null}
         </div>
-        <div className="home-brand">
-          <LogoCluster
-            showIcons={showSphereLinks}
-            sphereLinks={showSphereLinks ? sphereLinks : undefined}
-            mainLink={projectLink}
-          />
-        </div>
       </div>
 
       {showSphereLinks ? (
@@ -97,6 +90,14 @@ export function HomePage() {
           )}
         </div>
       ) : null}
+
+      <div className="home-brand-panel">
+        <LogoCluster
+          showIcons={showSphereLinks}
+          sphereLinks={showSphereLinks ? sphereLinks : undefined}
+          mainLink={projectLink}
+        />
+      </div>
     </section>
   )
 }

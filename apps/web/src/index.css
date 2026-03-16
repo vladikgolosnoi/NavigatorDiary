@@ -344,7 +344,7 @@ button {
 .stack-item,
 .notification-item,
 .home-copy,
-.home-brand {
+.home-brand-panel {
   min-width: 0;
 }
 
@@ -1187,14 +1187,10 @@ button {
 }
 
 .home-screen {
-  gap: 0;
+  gap: 20px;
 }
 
 .home-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 0.92fr) minmax(320px, 1.08fr);
-  gap: 22px;
-  align-items: start;
   padding: 26px;
   border-radius: 30px;
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(255, 246, 233, 0.92));
@@ -1225,7 +1221,12 @@ button {
   display: inline-block;
 }
 
-.home-brand {
+.home-brand-panel {
+  padding: 24px;
+  border-radius: 30px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(255, 246, 233, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.74);
+  box-shadow: 0 26px 48px rgba(16, 50, 70, 0.12);
   min-width: 0;
 }
 
@@ -1294,7 +1295,6 @@ button {
   }
 
   .home-hero {
-    grid-template-columns: 1fr;
     padding: 22px;
   }
 }
@@ -1568,6 +1568,11 @@ button {
     border-radius: 24px;
   }
 
+  .home-brand-panel {
+    padding: 18px;
+    border-radius: 24px;
+  }
+
   .home-copy h1 {
     font-size: 1.95rem;
   }
@@ -1679,6 +1684,11 @@ button {
 
   .logo-card.logo-main img {
     max-width: 184px;
+  }
+
+  .home-brand-panel {
+    padding: 14px;
+    border-radius: 18px;
   }
 
   .goal-item {
