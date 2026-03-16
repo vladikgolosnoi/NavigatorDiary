@@ -43,7 +43,7 @@ export const topNavItems: TopNavItem[] = [
   },
   {
     label: 'Хатка бобра',
-    shortLabel: 'Бобр',
+    shortLabel: 'Хатка',
     path: '/beaver-hut',
     match: ['/beaver-hut'],
     requiresAuth: true,

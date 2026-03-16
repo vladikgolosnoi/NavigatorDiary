@@ -5,12 +5,13 @@ import { FormField } from '../components/FormField'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { apiFetch, ApiError } from '../api/client'
 import { useAuth } from '../state/auth'
+import { formatDateForDisplay, maskDateInput, normalizeDateValue } from '../utils/dateInput'
 
 const initialProfile = {
   lastName: 'Иванов',
   firstName: 'Иван',
   middleName: 'Иванович',
-  birthDate: '2011-04-12',
+  birthDate: '12.04.2011',
   email: 'ivanov@example.com'
 }
 
@@ -112,7 +113,7 @@ export function ProfilePage() {
           lastName: data.lastName ?? '',
           firstName: data.firstName ?? '',
           middleName: data.middleName ?? '',
-          birthDate: data.birthDate ? new Date(data.birthDate).toISOString().slice(0, 10) : '',
+          birthDate: data.birthDate ? formatDateForDisplay(new Date(data.birthDate).toISOString().slice(0, 10)) : '',
           email: data.email ?? ''
         })
       })
@@ -134,6 +135,8 @@ export function ProfilePage() {
     }
     if (!profile.birthDate) {
       nextErrors.birthDate = 'Введите дату рождения'
+    } else if (!normalizeDateValue(profile.birthDate)) {
+      nextErrors.birthDate = 'Неверный формат даты'
     }
     if (profile.email.trim().length < 5) {
       nextErrors.email = 'Введите email'
@@ -145,13 +148,18 @@ export function ProfilePage() {
         return
       }
       try {
+        const normalizedBirthDate = normalizeDateValue(profile.birthDate)
+        if (!normalizedBirthDate) {
+          setErrors((prev) => ({ ...prev, birthDate: 'Неверный формат даты' }))
+          return
+        }
         await apiFetch('/users/me', {
           method: 'PATCH',
           body: JSON.stringify({
             firstName: profile.firstName,
             lastName: profile.lastName,
             middleName: profile.middleName,
-            birthDate: profile.birthDate,
+            birthDate: normalizedBirthDate,
             email: profile.email
           })
         }, auth.token)
@@ -248,10 +256,15 @@ export function ProfilePage() {
           <FormField label="Дата рождения" error={errors.birthDate}>
             <input
               className="input"
-              type="date"
+              type="text"
               value={profile.birthDate}
-              onChange={(event) => setProfile({ ...profile, birthDate: event.target.value })}
+              onChange={(event) => setProfile({ ...profile, birthDate: maskDateInput(event.target.value) })}
+              inputMode="numeric"
+              autoComplete="bday"
+              placeholder="ДД.ММ.ГГГГ"
+              maxLength={10}
             />
+            <small className="field-hint">Можно вводить дату вручную, без долгой прокрутки календаря.</small>
           </FormField>
           <FormField label="Email" error={errors.email}>
             <input

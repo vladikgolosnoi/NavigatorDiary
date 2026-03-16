@@ -57,8 +57,8 @@ export function HomePage() {
       </div>
 
       {showSphereLinks ? (
-        <div className="card-grid" id="home-announcements">
-          <article className="card highlight">
+        <div className="card-grid home-announcements-grid" id="home-announcements">
+          <article className="card highlight home-announcements-intro">
             <h2>Анонсы мероприятий</h2>
             <p>
               Здесь отображаются последние объявления организаторов для навигаторов и
@@ -72,11 +72,11 @@ export function HomePage() {
 
           {announcements.length ? (
             announcements.map((item) => (
-              <article key={item.id} className="card">
+              <article key={item.id} className="card home-announcement-card">
                 <h3>{item.title}</h3>
-                <p>{item.body}</p>
+                <p className="home-announcement-body">{item.body}</p>
                 <div className="card-footer">
-                  <span className="pill">
+                  <span className="pill home-announcement-date">
                     {new Date(item.publishedAt ?? item.createdAt ?? Date.now()).toLocaleDateString('ru-RU')}
                   </span>
                 </div>

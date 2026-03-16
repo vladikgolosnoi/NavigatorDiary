@@ -6,6 +6,7 @@ import { apiFetch, ApiError } from '../api/client'
 import { useAuth } from '../state/auth'
 import { useLocation, useNavigate } from 'react-router-dom'
 import type { UserRole } from '../state/navigation'
+import { maskDateInput, normalizeDateValue } from '../utils/dateInput'
 
 type TeamOption = {
   id: string
@@ -36,7 +37,11 @@ type UserStatus = {
 }
 
 function getAge(birthDate: string) {
-  const date = new Date(birthDate)
+  const normalized = normalizeDateValue(birthDate)
+  if (!normalized) {
+    return null
+  }
+  const date = new Date(normalized)
   if (Number.isNaN(date.getTime())) {
     return null
   }
@@ -114,8 +119,8 @@ export function AuthUserPage() {
       const age = getAge(registerData.birthDate)
       if (age === null) {
         nextErrors.birthDate = 'Неверный формат даты'
-      } else if (age < 6 || age > 22) {
-        nextErrors.birthDate = 'Возраст должен быть от 6 до 22 лет'
+      } else if (age < 6) {
+        nextErrors.birthDate = 'Возраст участника должен быть не меньше 6 лет'
       }
     }
     if (!registerData.teamId) {
@@ -132,13 +137,18 @@ export function AuthUserPage() {
     if (Object.keys(nextErrors).length === 0) {
       try {
         setLoading(true)
+        const normalizedBirthDate = normalizeDateValue(registerData.birthDate)
+        if (!normalizedBirthDate) {
+          setErrors((prev) => ({ ...prev, birthDate: 'Неверный формат даты' }))
+          return
+        }
         const response = await apiFetch<{ id: string; status: string }>('/auth/register', {
           method: 'POST',
           body: JSON.stringify({
             firstName: registerData.firstName,
             lastName: registerData.lastName,
             middleName: registerData.middleName,
-            birthDate: registerData.birthDate,
+            birthDate: normalizedBirthDate,
             email: registerData.email,
             password: registerData.password,
             teamId: registerData.teamId
@@ -315,10 +325,17 @@ export function AuthUserPage() {
             <FormField label="Дата рождения" error={errors.birthDate}>
               <input
                 className="input"
-                type="date"
+                type="text"
                 value={registerData.birthDate}
-                onChange={(event) => setRegisterData({ ...registerData, birthDate: event.target.value })}
+                onChange={(event) =>
+                  setRegisterData({ ...registerData, birthDate: maskDateInput(event.target.value) })
+                }
+                inputMode="numeric"
+                autoComplete="bday"
+                placeholder="ДД.ММ.ГГГГ"
+                maxLength={10}
               />
+              <small className="field-hint">Можно ввести дату вручную в формате ДД.ММ.ГГГГ.</small>
             </FormField>
             <FormField label="Команда" error={errors.teamId}>
               <select

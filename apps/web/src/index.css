@@ -1061,6 +1061,13 @@ button {
   font-weight: 600;
 }
 
+.field-hint {
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
 .input {
   min-height: 48px;
   border-radius: 14px;
@@ -1228,6 +1235,53 @@ button {
   border: 1px solid rgba(255, 255, 255, 0.74);
   box-shadow: 0 26px 48px rgba(16, 50, 70, 0.12);
   min-width: 0;
+}
+
+.home-announcements-grid {
+  align-items: stretch;
+}
+
+.home-announcements-intro {
+  position: relative;
+  overflow: hidden;
+}
+
+.home-announcements-intro::before,
+.home-announcement-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--accent), var(--primary));
+}
+
+.home-announcement-card {
+  position: relative;
+  overflow: hidden;
+  padding-left: 24px;
+}
+
+.home-announcement-card h3 {
+  margin-bottom: 10px;
+}
+
+.home-announcement-body {
+  margin: 0;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.home-announcement-date {
+  background: rgba(11, 74, 111, 0.1);
+  color: var(--primary);
+  font-weight: 700;
 }
 
 .pill.accent {
@@ -1573,6 +1627,10 @@ button {
     border-radius: 24px;
   }
 
+  .home-announcement-card {
+    padding-left: 22px;
+  }
+
   .home-copy h1 {
     font-size: 1.95rem;
   }
@@ -1689,6 +1747,10 @@ button {
   .home-brand-panel {
     padding: 14px;
     border-radius: 18px;
+  }
+
+  .home-announcement-card {
+    padding-left: 18px;
   }
 
   .goal-item {
