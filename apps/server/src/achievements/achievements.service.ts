@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
-import { AchievementStage, GoalStatus } from '@prisma/client'
+import { AchievementStage, GoalStatus, SpecialtyStatus } from '@prisma/client'
 import { calculateAchievementStage, calculateAge, calculateAgeStatus } from './achievements.rules'
 
 @Injectable()
@@ -54,7 +54,9 @@ export class AchievementsService {
       ageStatus: achievement.ageStatus,
       stage: achievement.stage,
       goalsAchievedCount: achievement.goalsAchievedCount,
-      specialties: user.specialties.map((specialty) => ({
+      specialties: user.specialties
+        .filter((specialty) => specialty.status === SpecialtyStatus.COMPLETED)
+        .map((specialty) => ({
         id: specialty.id,
         status: specialty.status,
         specialty: specialty.specialty.name,

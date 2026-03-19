@@ -2,6 +2,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { TopNav } from '../components/TopNav'
 import { SubNav } from '../components/SubNav'
 import { MobileBottomNav } from '../components/MobileBottomNav'
+import { SupportFooter } from '../components/SupportFooter'
 import { getScreenTitle, getSubMenu } from '../state/navigation'
 import { LastStateContext, LAST_STATE_KEY, LastState } from '../state/lastState'
 import { useLocalStorage } from '../hooks/useLocalStorage'
@@ -33,6 +34,7 @@ export function AppShell() {
         <main className="main-content">
           <Outlet />
         </main>
+        <SupportFooter />
         <MobileBottomNav />
       </div>
     </LastStateContext.Provider>

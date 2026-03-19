@@ -7,7 +7,7 @@ import { AuthUser } from '../goals/goals.types'
 import { ChatService } from '../chat/chat.service'
 import { AuditService } from '../audit/audit.service'
 
-const MAX_ACTIVE_SPECIALTIES = 3
+const MAX_ACTIVE_SPECIALTIES = 1
 
 @Injectable()
 export class SpecialtiesService {
@@ -63,7 +63,7 @@ export class SpecialtiesService {
     })
 
     if (activeSpecialties.length >= MAX_ACTIVE_SPECIALTIES) {
-      throw new BadRequestException('Можно иметь не более трёх активных специальностей')
+      throw new BadRequestException('Можно иметь только одну активную специальность')
     }
 
     const duplicateSpecialty = activeSpecialties.find((item) => item.specialtyId === dto.specialtyId)
@@ -232,6 +232,38 @@ export class SpecialtiesService {
     await this.auditService.log('SPECIALTY_CONFIRMED', user.userId, 'UserSpecialty', userSpecialtyId, {
       confirmedById: user.userId
     })
+    return updated
+  }
+
+  async cancelSpecialty(user: AuthUser, userSpecialtyId: string) {
+    const userSpecialty = await this.prisma.userSpecialty.findUnique({
+      where: { id: userSpecialtyId }
+    })
+
+    if (!userSpecialty) {
+      throw new NotFoundException('Специальность не найдена')
+    }
+
+    if (userSpecialty.userId !== user.userId) {
+      throw new ForbiddenException('Нельзя отменить специальность другого пользователя')
+    }
+
+    if (userSpecialty.status !== SpecialtyStatus.ACTIVE) {
+      throw new BadRequestException('Отменить можно только активную специальность')
+    }
+
+    const updated = await this.prisma.userSpecialty.update({
+      where: { id: userSpecialtyId },
+      data: {
+        status: SpecialtyStatus.CANCELLED,
+        completedAt: null,
+        confirmedAt: null,
+        confirmedById: null
+      }
+    })
+
+    await this.auditService.log('SPECIALTY_CANCELLED', user.userId, 'UserSpecialty', userSpecialtyId)
+
     return updated
   }
 

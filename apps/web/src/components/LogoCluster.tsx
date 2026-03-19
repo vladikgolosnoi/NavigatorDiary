@@ -1,10 +1,10 @@
-import logoDruzhina from '../assets/brand/logo-druzhina.jpg'
-import iconEmotional from '../assets/icons/icon-emotional.jpg'
-import iconIntellectual from '../assets/icons/icon-intellectual.jpg'
-import iconPhysical from '../assets/icons/icon-physical.jpg'
-import iconSocial from '../assets/icons/icon-social.jpg'
-import iconSpiritual from '../assets/icons/icon-spiritual.jpg'
-import iconCharacter from '../assets/icons/icon-character.jpg'
+import logoDruzhina from '../assets/brand/logo-druzhina-clean.png'
+import iconEmotional from '../assets/icons-clean/icon-emotional.png'
+import iconIntellectual from '../assets/icons-clean/icon-intellectual.png'
+import iconPhysical from '../assets/icons-clean/icon-physical.png'
+import iconSocial from '../assets/icons-clean/icon-social.png'
+import iconSpiritual from '../assets/icons-clean/icon-spiritual.png'
+import iconCharacter from '../assets/icons-clean/icon-character.png'
 
 export const developmentIcons = [
   { key: 'emotional', src: iconEmotional, label: 'Эмоциональное развитие' },
@@ -24,27 +24,35 @@ type LogoClusterProps = {
 }
 
 export function LogoCluster({ showIcons = true, sphereLinks, mainLink }: LogoClusterProps) {
-  const renderCard = (href: string | undefined, className: string, image: string, label: string) => {
+  const renderCard = (
+    href: string | undefined,
+    className: string,
+    image: string,
+    label: string,
+    description?: string
+  ) => {
     if (!href) {
       return (
-        <div className={className}>
+        <div className={className} title={label}>
           <img src={image} alt={label} />
           <span>{label}</span>
+          {description ? <small>{description}</small> : null}
         </div>
       )
     }
 
     return (
-      <a className={`${className} logo-link`} href={href} target="_blank" rel="noreferrer">
+      <a className={`${className} logo-link`} href={href} target="_blank" rel="noreferrer" title={label}>
         <img src={image} alt={label} />
         <span>{label}</span>
+        {description ? <small>{description}</small> : null}
       </a>
     )
   }
 
   return (
     <div className="logo-cluster">
-      {renderCard(mainLink, 'logo-card logo-main', logoDruzhina, 'Дружина навигаторов')}
+      {renderCard(mainLink, 'logo-card logo-main', logoDruzhina, 'Сайт проекта', 'Дружина навигаторов')}
       {showIcons
         ? developmentIcons.map((icon) =>
             renderCard(sphereLinks?.[icon.key], 'logo-card logo-icon', icon.src, icon.label)

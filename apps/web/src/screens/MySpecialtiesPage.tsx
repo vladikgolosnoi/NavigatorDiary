@@ -85,57 +85,45 @@ export function MySpecialtiesPage() {
     }
   }
 
-  if (specialties.length === 0) {
-    return (
-      <section className="screen">
-        <header className="screen-header">
-          <div>
-            <h1>Мои специальности</h1>
-            <p>Сейчас нет активных специальностей. Можно выбрать до трёх одновременно.</p>
-            <BadgeRow items={['Чек-лист', 'Материалы', 'Статусы']} />
-          </div>
-          <div className="screen-actions">
-            <button className="btn primary" onClick={() => navigate('/specialties/catalog')}>
-              Открыть каталог
-            </button>
-          </div>
-        </header>
-        {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
-        <div className="state-grid">
-          <article className="card highlight">
-            <h3>Выберите специальности</h3>
-            <p>
-              Откройте каталог, выберите до трёх специальностей и уровней. После этого здесь
-              появятся чек-листы, материалы и статусы подтверждения.
-            </p>
-            <button className="btn primary" type="button" onClick={() => navigate('/specialties/catalog')}>
-              Перейти в каталог специальностей
-            </button>
-          </article>
-        </div>
-      </section>
-    )
+  const cancelSpecialty = async (userSpecialtyId: string) => {
+    if (!auth.token) {
+      return
+    }
+    setNotice('')
+    setErrorMessage('')
+    try {
+      await apiFetch(`/specialties/${userSpecialtyId}/cancel`, { method: 'POST' }, auth.token)
+      setSpecialties((prev) => prev.filter((item) => item.id !== userSpecialtyId))
+      setNotice('Специальность снята. Теперь можно выбрать другую.')
+    } catch (error) {
+      const apiError = error as ApiError
+      setErrorMessage(apiError.message || 'Не удалось снять специальность')
+    }
   }
 
-  const specialtiesWithMeta = specialties.map((specialty) => {
-    const checklist = specialty.checklistProgress ?? specialty.level.checklist
-    const checkedCount = checklist.filter((item) => item.checked).length
-    const total = checklist.length
-    const allChecked = total > 0 && checkedCount === total
-    const materials = specialty.specialty.resources.filter((item) => item.type === 'MATERIAL')
-    const needsOrganizer = specialty.level.name === 'SILVER' || specialty.level.name === 'GOLD'
-    const approverLabel = needsOrganizer ? 'организатора' : 'руководителя команды'
+  const specialtiesWithMeta = useMemo(
+    () =>
+      specialties.map((specialty) => {
+        const checklist = specialty.checklistProgress ?? specialty.level.checklist
+        const checkedCount = checklist.filter((item) => item.checked).length
+        const total = checklist.length
+        const allChecked = total > 0 && checkedCount === total
+        const materials = specialty.specialty.resources.filter((item) => item.type === 'MATERIAL')
+        const needsOrganizer = specialty.level.name === 'SILVER' || specialty.level.name === 'GOLD'
+        const approverLabel = needsOrganizer ? 'организатора' : 'руководителя команды'
 
-    return {
-      ...specialty,
-      checklist,
-      checkedCount,
-      total,
-      allChecked,
-      materials,
-      approverLabel
-    }
-  })
+        return {
+          ...specialty,
+          checklist,
+          checkedCount,
+          total,
+          allChecked,
+          materials,
+          approverLabel
+        }
+      }),
+    [specialties]
+  )
 
   const readyForConfirmation = specialtiesWithMeta.filter((item) => item.allChecked)
   const allMaterials = specialtiesWithMeta.flatMap((item) =>
@@ -153,12 +141,45 @@ export function MySpecialtiesPage() {
     [specialtiesWithMeta]
   )
 
+  if (specialties.length === 0) {
+    return (
+      <section className="screen">
+        <header className="screen-header">
+          <div>
+            <h1>Мои специальности</h1>
+            <p>Сейчас нет активной специальности. Выберите одну и ведите её до подтверждения.</p>
+            <BadgeRow items={['Чек-лист', 'Материалы', 'Статусы']} />
+          </div>
+          <div className="screen-actions">
+            <button className="btn primary" onClick={() => navigate('/specialties/catalog')}>
+              Открыть каталог
+            </button>
+          </div>
+        </header>
+        {notice ? <div className="info-banner">{notice}</div> : null}
+        {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
+        <div className="state-grid">
+          <article className="card highlight">
+            <h3>Выберите специальность</h3>
+            <p>
+              Откройте каталог, выберите специальность и уровень. После этого здесь появятся
+              чек-лист, материалы и статус подтверждения.
+            </p>
+            <button className="btn primary" type="button" onClick={() => navigate('/specialties/catalog')}>
+              Перейти в каталог специальностей
+            </button>
+          </article>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section className="screen">
       <header className="screen-header">
         <div>
           <h1>Мои специальности</h1>
-          <p>Ведите до трёх специальностей, отмечайте чек-листы и следите за подтверждением.</p>
+          <p>Ведите одну текущую специальность, отмечайте чек-лист и следите за подтверждением.</p>
           <BadgeRow items={['Чек-лист', 'Материалы', 'Статусы']} />
         </div>
         <div className="screen-actions">
@@ -182,8 +203,8 @@ export function MySpecialtiesPage() {
 
       <div className="card-grid">
         <article className="card" id="specialties-status">
-          <h3>Текущие специальности</h3>
-          <p>Активно: {specialtiesWithMeta.length} / 3</p>
+          <h3>Текущая специальность</h3>
+          <p>Активно: {specialtiesWithMeta.length} / 1</p>
           <div className="tag-list">
             {specialtiesWithMeta.map((item) => (
               <span key={item.id} className="tag">
@@ -192,14 +213,14 @@ export function MySpecialtiesPage() {
             ))}
           </div>
           <div className="card-footer">
-            <span className="pill">До 3 активных</span>
-            <span className="pill accent">Параллельный прогресс</span>
+            <span className="pill">Одна активная</span>
+            <span className="pill accent">Смена через отказ</span>
           </div>
         </article>
         <article className="card">
           <h3>Этапы чек-листа</h3>
           <img className="progress-illustration" src={checklistSteps} alt="Шкала чек-листа" />
-          <p>Можно вести несколько специальностей сразу и закрывать пункты независимо друг от друга.</p>
+          <p>Если передумали, снимите текущую специальность и выберите новую в каталоге.</p>
         </article>
         <article className="card" id="specialties-checklist">
           <h3>Прогресс по чек-листам</h3>
@@ -244,6 +265,11 @@ export function MySpecialtiesPage() {
                   {specialty.checkedCount} / {specialty.total}
                 </span>
                 <span className="pill accent">{specialty.allChecked ? 'Готово к подтверждению' : 'В работе'}</span>
+                {!specialty.allChecked ? (
+                  <button className="btn ghost btn-inline" type="button" onClick={() => cancelSpecialty(specialty.id)}>
+                    Снять специальность
+                  </button>
+                ) : null}
               </div>
             </div>
 

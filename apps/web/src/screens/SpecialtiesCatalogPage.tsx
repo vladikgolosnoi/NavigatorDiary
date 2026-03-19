@@ -102,6 +102,7 @@ export function SpecialtiesCatalogPage() {
   )
 
   const videoResources = activeSpecialty?.resources.filter((res) => res.type === 'VIDEO') ?? []
+  const currentSpecialty = activeSpecialties[0] ?? null
 
   const selectSpecialty = async () => {
     setNotice('')
@@ -110,8 +111,8 @@ export function SpecialtiesCatalogPage() {
       setErrorMessage('Для выбора специальности требуется вход.')
       return
     }
-    if (activeSpecialties.length >= 3) {
-      setNotice('Можно иметь не более трёх активных специальностей.')
+    if (currentSpecialty) {
+      setNotice('Сначала снимите текущую специальность, затем выберите новую.')
       return
     }
     if (activeSpecialties.some((item) => item.specialty.id === activeSpecialty?.id)) {
@@ -143,6 +144,24 @@ export function SpecialtiesCatalogPage() {
     }
   }
 
+  const cancelSpecialty = async (userSpecialtyId: string) => {
+    if (!auth.token) {
+      setErrorMessage('Для изменения специальности требуется вход.')
+      return
+    }
+    setNotice('')
+    setErrorMessage('')
+    try {
+      await apiFetch(`/specialties/${userSpecialtyId}/cancel`, { method: 'POST' }, auth.token)
+      const updated = await apiFetch<ActiveSpecialty[]>('/specialties/my', {}, auth.token)
+      setActiveSpecialties(updated)
+      setNotice('Текущая специальность снята. Теперь можно выбрать новую.')
+    } catch (error) {
+      const apiError = error as ApiError
+      setErrorMessage(apiError.message || 'Не удалось снять специальность')
+    }
+  }
+
   const selectedLabel = useMemo(() => {
     if (!activeSpecialty || !selectedLevelId) {
       return 'Специальность не выбрана'
@@ -158,7 +177,7 @@ export function SpecialtiesCatalogPage() {
       <header className="screen-header">
         <div>
           <h1>Каталог специальностей</h1>
-          <p>Выберите область, специальность и уровень. Одновременно можно вести до трёх специальностей.</p>
+          <p>Выберите область, специальность и уровень. Одновременно можно вести только одну специальность.</p>
           <BadgeRow items={['Область', 'Видео', 'Специальность', 'Уровень']} />
         </div>
         <div className="screen-actions">
@@ -253,7 +272,7 @@ export function SpecialtiesCatalogPage() {
         <article className="card highlight">
           <h3>Мой выбор</h3>
           <p>{selectedLabel}</p>
-          <p>Активно специальностей: {activeSpecialties.length} / 3</p>
+          <p>Активно специальностей: {activeSpecialties.length} / 1</p>
           {activeLabels.length ? (
             <div className="tag-list">
               {activeLabels.map((label) => (
@@ -264,13 +283,18 @@ export function SpecialtiesCatalogPage() {
             </div>
           ) : null}
           <div className="card-footer">
-            <span className="pill">До 3 активных</span>
+            <span className="pill">Одна активная</span>
             <span className="pill accent">Чек-лист</span>
           </div>
+          {currentSpecialty ? (
+            <button className="btn ghost" type="button" onClick={() => cancelSpecialty(currentSpecialty.id)}>
+              Снять текущую специальность
+            </button>
+          ) : null}
         </article>
         <article className="card">
           <h3>Подсказка</h3>
-          <p>Просмотрите видео и материалы, прежде чем выбирать уровень.</p>
+          <p>Просмотрите видео и материалы, прежде чем выбирать уровень. Если передумали, снимите текущую специальность и выберите новую.</p>
         </article>
       </div>
     </section>

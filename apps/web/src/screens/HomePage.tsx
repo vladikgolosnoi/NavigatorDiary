@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react'
 import { apiFetch } from '../api/client'
 import { LogoCluster } from '../components/LogoCluster'
 import { useAuth } from '../state/auth'
+import partnerEducation from '../assets/partners/education-rostov.png'
+import partnerDtdm from '../assets/partners/dtdm-rostov.jpg'
+import partnerDgtu from '../assets/partners/dgtu-hearts.png'
+import partnerLibi from '../assets/partners/libi.png'
 
 const sphereLinks = {
   intellectual: 'https://rsdmo.ru/page95471836.html',
@@ -13,6 +17,30 @@ const sphereLinks = {
 } as const
 
 const projectLink = 'https://rsdmo.ru/page77671096.html'
+const eventsLink = 'https://t.me/druzhinaevents2025'
+
+const partners = [
+  {
+    name: 'Управление образования города Ростова-на-Дону',
+    href: 'https://rostov-gorod.ru/administration/structure/office/uo/',
+    logo: partnerEducation
+  },
+  {
+    name: 'Дворец творчества детей и молодежи',
+    href: 'https://dtdm-rostov.ru/',
+    logo: partnerDtdm
+  },
+  {
+    name: 'Волонтерский центр ДГТУ «Горящие сердца»',
+    href: 'https://vk.com/heartsdonstu',
+    logo: partnerDgtu
+  },
+  {
+    name: 'Центр развития «ЛИБИ»',
+    href: 'https://libi.pro/',
+    logo: partnerLibi
+  }
+] as const
 
 type Announcement = {
   id: string
@@ -44,15 +72,12 @@ export function HomePage() {
         <div className="home-copy">
           <h1>Главная</h1>
           <p>
-            Приветствуем вас в движении &laquo;Дружина навигаторов&raquo;. Участвовать легко,
-            соберите команду навигаторов в составе от 7 до 9 человек и 1 взрослого. Участники
-            команд организуют активности и выполняют вызовы, развивая личные качества,
-            приобретая полезные навыки и просто веселясь. Активности можно выбрать по сферам
-            развития, исходя из интересов навигаторов.
+            Приветствуем вас в движении &laquo;Дружина навигаторов&raquo; Ростовского Союза
+            детских и молодежных организаций! Участвовать легко, соберите команду навигаторов в
+            составе от 7 до 9 человек и 1 взрослого. Участники команд организуют активности и
+            выполняют вызовы, развивая личные качества, приобретая полезные навыки и просто
+            веселясь. Активности можно выбрать по сферам развития, исходя из своих интересов.
           </p>
-          {showSphereLinks ? (
-            <p className="home-note">Нажмите на значок сферы, чтобы открыть подборку активностей.</p>
-          ) : null}
         </div>
       </div>
 
@@ -65,8 +90,9 @@ export function HomePage() {
               руководителей команд.
             </p>
             <div className="card-footer">
-              <span className="pill">Команды</span>
-              <span className="pill accent">События проекта</span>
+              <a className="btn ghost btn-inline" href={eventsLink} target="_blank" rel="noreferrer">
+                События проекта
+              </a>
             </div>
           </article>
 
@@ -91,13 +117,32 @@ export function HomePage() {
         </div>
       ) : null}
 
-      <div className="home-brand-panel">
+      {showSphereLinks ? <p className="home-note">Здесь ты можешь выбрать понравившуюся активность.</p> : null}
+
+      <div className="home-brand-panel" id="home-spheres">
         <LogoCluster
           showIcons={showSphereLinks}
           sphereLinks={showSphereLinks ? sphereLinks : undefined}
           mainLink={projectLink}
         />
       </div>
+
+      <section className="card partners-panel" id="home-partners">
+        <div className="partners-head">
+          <div>
+            <h2>Партнеры</h2>
+            <p>Организации, которые поддерживают проект и помогают проводить активности.</p>
+          </div>
+        </div>
+        <div className="partners-grid">
+          {partners.map((partner) => (
+            <a key={partner.name} className="partner-card" href={partner.href} target="_blank" rel="noreferrer">
+              <img src={partner.logo} alt={partner.name} />
+              <span>{partner.name}</span>
+            </a>
+          ))}
+        </div>
+      </section>
     </section>
   )
 }

@@ -37,6 +37,12 @@ export class SpecialtiesController {
     return this.specialtiesService.checkChecklistItem(req.user, userSpecialtyId, dto)
   }
 
+  @Post(':userSpecialtyId/cancel')
+  @Roles(RoleName.NAVIGATOR)
+  async cancelSpecialty(@Req() req: RequestWithUser, @Param('userSpecialtyId') userSpecialtyId: string) {
+    return this.specialtiesService.cancelSpecialty(req.user, userSpecialtyId)
+  }
+
   @Post(':userSpecialtyId/confirm')
   @Roles(RoleName.LEADER, RoleName.ORGANIZER)
   async confirmSpecialty(@Req() req: RequestWithUser, @Param('userSpecialtyId') userSpecialtyId: string) {

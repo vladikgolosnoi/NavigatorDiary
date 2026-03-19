@@ -27,7 +27,7 @@ export const topNavItems: TopNavItem[] = [
   },
   {
     label: 'Мои специальности',
-    shortLabel: 'Спец',
+    shortLabel: 'Спец.',
     path: '/specialties/my',
     match: ['/specialties'],
     requiresAuth: true,
@@ -107,8 +107,9 @@ export const subMenus: Array<{ prefix: string; items: SubMenuItem[] }> = [
     prefix: '/home',
     items: [
       { label: 'О проекте', anchor: 'home-welcome' },
-      { label: 'Сферы развития', anchor: 'home-welcome', roles: ['LEADER', 'NAVIGATOR'] },
-      { label: 'Анонсы', anchor: 'home-announcements', roles: ['LEADER', 'NAVIGATOR'] }
+      { label: 'Анонсы', anchor: 'home-announcements', roles: ['LEADER', 'NAVIGATOR'] },
+      { label: 'Сферы развития', anchor: 'home-spheres', roles: ['LEADER', 'NAVIGATOR'] },
+      { label: 'Партнеры', anchor: 'home-partners' }
     ]
   },
   {
@@ -254,7 +255,7 @@ export const screenConfigs: ScreenConfig[] = [
   {
     path: '/specialties/catalog',
     title: 'Каталог специальностей',
-    description: 'Выберите до трёх активных специальностей и уровни.',
+    description: 'Выберите одну активную специальность и её уровень.',
     badges: ['Область', 'Видео', 'Специальность', 'Уровень']
   },
   {

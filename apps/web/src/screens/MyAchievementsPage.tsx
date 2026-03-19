@@ -26,6 +26,15 @@ const levelMap: Record<string, string> = {
   GOLD: 'Золото'
 }
 
+const stageDescriptions: Record<string, string> = {
+  START: 'Старт - достигнуто до 23 целей.',
+  PATH: 'Путь - достигнуто более 24 целей. Можно получить значок этапа.',
+  TRAIL: 'Тропа - достигнуто более 48 целей. Можно получить значок этапа.',
+  ROUTE: 'Маршрут - достигнуто более 72 целей. Можно получить значок этапа.',
+  EXPEDITION: 'Экспедиция - достигнуто более 144 целей. Можно получить значок этапа.',
+  SUCCESS: 'Успех - достигнуто более 216 целей. Можно получить значок этапа.'
+}
+
 type AchievementResponse = {
   age: number
   ageStatus: string
@@ -123,7 +132,7 @@ export function MyAchievementsPage() {
             </div>
           </div>
           <div className="card-footer">
-            <span className="pill">6–22 года</span>
+            <span className="pill">Возрастной статус</span>
             <span className="pill accent">Статус</span>
           </div>
         </article>
@@ -131,6 +140,7 @@ export function MyAchievementsPage() {
           <h3>Этап по целям</h3>
           <p>{stageMap[achievement.stage] ?? achievement.stage}</p>
           <p>Достигнуто целей: {achievement.goalsAchievedCount}</p>
+          <p className="hint">{stageDescriptions[achievement.stage] ?? 'Этап обновится автоматически после достижения целей.'}</p>
           <StageBadgeGrid activeCode={achievement.stage} compact />
           <div className="card-footer">
             <span className="pill">Старт – Успех</span>
@@ -138,7 +148,7 @@ export function MyAchievementsPage() {
           </div>
         </article>
         <article className="card" id="achievements-specialties">
-          <h3>Специальности</h3>
+          <h3>Полученные специальности</h3>
           {achievement.specialties.length ? (
             <div className="tag-list">
               {achievement.specialties.map((spec) => (

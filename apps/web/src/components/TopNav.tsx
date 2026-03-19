@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { getVisibleTopNavItems } from '../state/navigation'
 import { useAuth } from '../state/auth'
-import logoDruzhina from '../assets/brand/logo-druzhina.jpg'
+import logoDruzhina from '../assets/brand/logo-druzhina-clean.png'
 
 const roleLabels: Record<string, string> = {
   ORGANIZER: 'Организатор',
