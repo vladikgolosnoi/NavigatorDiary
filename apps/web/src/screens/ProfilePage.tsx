@@ -2,27 +2,26 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BadgeRow } from '../components/BadgeRow'
 import { FormField } from '../components/FormField'
-import { useLocalStorage } from '../hooks/useLocalStorage'
 import { apiFetch, ApiError } from '../api/client'
 import { useAuth } from '../state/auth'
 import { formatDateForDisplay, maskDateInput, normalizeDateValue } from '../utils/dateInput'
 
 const initialProfile = {
-  lastName: 'Иванов',
-  firstName: 'Иван',
-  middleName: 'Иванович',
-  birthDate: '12.04.2011',
-  email: 'ivanov@example.com'
+  lastName: '',
+  firstName: '',
+  middleName: '',
+  birthDate: '',
+  email: ''
 }
 
 export function ProfilePage() {
   const navigate = useNavigate()
-  const [profile, setProfile] = useLocalStorage('profile.data', initialProfile)
+  const [profile, setProfile] = useState(initialProfile)
   const [passwords, setPasswords] = useState({ current: '', next: '', repeat: '' })
   const [notice, setNotice] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [errorMessage, setErrorMessage] = useState('')
-  const { auth } = useAuth()
+  const { auth, setAuth } = useAuth()
   const role = auth.user?.role
 
   const primaryAction =
@@ -98,6 +97,21 @@ export function ProfilePage() {
   )
 
   useEffect(() => {
+    const authUser = auth.user
+
+    if (!authUser) {
+      return
+    }
+
+    setProfile((prev) => ({
+      ...prev,
+      lastName: prev.lastName || authUser.lastName || '',
+      firstName: prev.firstName || authUser.firstName || '',
+      middleName: prev.middleName || authUser.middleName || ''
+    }))
+  }, [auth.user])
+
+  useEffect(() => {
     if (!auth.token) {
       return
     }
@@ -109,18 +123,32 @@ export function ProfilePage() {
       email?: string | null
     }>('/users/me', {}, auth.token)
       .then((data) => {
-        setProfile({
+        const nextProfile = {
           lastName: data.lastName ?? '',
           firstName: data.firstName ?? '',
           middleName: data.middleName ?? '',
           birthDate: data.birthDate ? formatDateForDisplay(new Date(data.birthDate).toISOString().slice(0, 10)) : '',
           email: data.email ?? ''
-        })
+        }
+        setProfile(nextProfile)
+        setAuth((prev) =>
+          prev.user
+            ? {
+                ...prev,
+                user: {
+                  ...prev.user,
+                  firstName: data.firstName ?? prev.user.firstName,
+                  lastName: data.lastName ?? prev.user.lastName,
+                  middleName: data.middleName ?? null
+                }
+              }
+            : prev
+        )
       })
       .catch((error: ApiError) => {
         setErrorMessage(error.message || 'Не удалось загрузить профиль')
       })
-  }, [auth.token, setProfile])
+  }, [auth.token, setAuth])
 
   const submitProfile = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -153,7 +181,14 @@ export function ProfilePage() {
           setErrors((prev) => ({ ...prev, birthDate: 'Неверный формат даты' }))
           return
         }
-        await apiFetch('/users/me', {
+        const updatedProfile = await apiFetch<{
+          id: string
+          firstName: string
+          lastName: string
+          middleName?: string | null
+          birthDate: string
+          email?: string | null
+        }>('/users/me', {
           method: 'PATCH',
           body: JSON.stringify({
             firstName: profile.firstName,
@@ -163,6 +198,28 @@ export function ProfilePage() {
             email: profile.email
           })
         }, auth.token)
+        setProfile({
+          lastName: updatedProfile.lastName ?? '',
+          firstName: updatedProfile.firstName ?? '',
+          middleName: updatedProfile.middleName ?? '',
+          birthDate: updatedProfile.birthDate
+            ? formatDateForDisplay(new Date(updatedProfile.birthDate).toISOString().slice(0, 10))
+            : '',
+          email: updatedProfile.email ?? ''
+        })
+        setAuth((prev) =>
+          prev.user
+            ? {
+                ...prev,
+                user: {
+                  ...prev.user,
+                  firstName: updatedProfile.firstName ?? prev.user.firstName,
+                  lastName: updatedProfile.lastName ?? prev.user.lastName,
+                  middleName: updatedProfile.middleName ?? null
+                }
+              }
+            : prev
+        )
         setNotice('Данные профиля сохранены.')
       } catch (error) {
         const apiError = error as ApiError
