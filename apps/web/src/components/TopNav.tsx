@@ -18,18 +18,27 @@ export function TopNav() {
   const userLabel = auth.user
     ? `${auth.user.firstName} ${auth.user.lastName}`.trim()
     : ''
-  const [compact, setCompact] = useState(false)
-  const displayName = compact && auth.user ? auth.user.firstName : userLabel
+  const [compactUser, setCompactUser] = useState(false)
+  const [compactNav, setCompactNav] = useState(false)
+  const displayName = compactUser && auth.user ? auth.user.firstName : userLabel
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
       return
     }
-    const media = window.matchMedia('(max-width: 520px)')
-    const update = () => setCompact(media.matches)
+    const userMedia = window.matchMedia('(max-width: 520px)')
+    const navMedia = window.matchMedia('(max-width: 1500px)')
+    const update = () => {
+      setCompactUser(userMedia.matches)
+      setCompactNav(navMedia.matches)
+    }
     update()
-    media.addEventListener('change', update)
-    return () => media.removeEventListener('change', update)
+    userMedia.addEventListener('change', update)
+    navMedia.addEventListener('change', update)
+    return () => {
+      userMedia.removeEventListener('change', update)
+      navMedia.removeEventListener('change', update)
+    }
   }, [])
 
   return (
@@ -46,7 +55,7 @@ export function TopNav() {
       <nav className="top-nav-links">
         {navItems.map((item) => {
           const isActive = item.match.some((prefix) => location.pathname.startsWith(prefix))
-          const label = compact && item.shortLabel ? item.shortLabel : item.label
+          const label = compactNav && item.shortLabel ? item.shortLabel : item.label
           return (
             <NavLink
               key={item.path}

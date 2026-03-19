@@ -29,6 +29,10 @@ export function AppShell() {
   return (
     <LastStateContext.Provider value={lastState}>
       <div className="app-shell">
+        <div className="app-shell__aurora app-shell__aurora--one" aria-hidden="true" />
+        <div className="app-shell__aurora app-shell__aurora--two" aria-hidden="true" />
+        <div className="app-shell__aurora app-shell__aurora--three" aria-hidden="true" />
+        <div className="app-shell__grid" aria-hidden="true" />
         <TopNav />
         <SubNav items={getSubMenu(location.pathname, auth.user?.role ?? null)} />
         <main className="main-content">

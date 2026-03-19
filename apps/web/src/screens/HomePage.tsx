@@ -69,15 +69,47 @@ export function HomePage() {
   return (
     <section className="screen home-screen">
       <div className="home-hero" id="home-welcome">
-        <div className="home-copy">
-          <h1>Главная</h1>
-          <p>
-            Приветствуем вас в движении &laquo;Дружина навигаторов&raquo; Ростовского Союза
-            детских и молодежных организаций! Участвовать легко, соберите команду навигаторов в
-            составе от 7 до 9 человек и 1 взрослого. Участники команд организуют активности и
-            выполняют вызовы, развивая личные качества, приобретая полезные навыки и просто
-            веселясь. Активности можно выбрать по сферам развития, исходя из своих интересов.
-          </p>
+        <div className="home-hero-grid">
+          <div className="home-copy">
+            <span className="section-kicker">Мобильный дневник движения</span>
+            <h1>Главная</h1>
+            <p>
+              Приветствуем вас в движении &laquo;Дружина навигаторов&raquo; Ростовского Союза
+              детских и молодежных организаций! Участвовать легко, соберите команду навигаторов в
+              составе от 7 до 9 человек и 1 взрослого. Участники команд организуют активности и
+              выполняют вызовы, развивая личные качества, приобретая полезные навыки и просто
+              веселясь. Активности можно выбрать по сферам развития, исходя из своих интересов.
+            </p>
+            <div className="home-meta-row">
+              <span className="home-meta-pill">7–9 навигаторов</span>
+              <span className="home-meta-pill">1 взрослый</span>
+              <span className="home-meta-pill">6 сфер развития</span>
+            </div>
+          </div>
+
+          <aside className="home-hero-side">
+            <div className="home-hero-side__head">
+              <span className="section-kicker">Маршрут участия</span>
+              <strong>От команды к достижениям</strong>
+            </div>
+            <div className="home-hero-stats">
+              <article className="home-stat-card">
+                <span>Формат</span>
+                <strong>Командный</strong>
+                <p>Растите вместе, а не поодиночке.</p>
+              </article>
+              <article className="home-stat-card">
+                <span>Фокус</span>
+                <strong>Навыки + характер</strong>
+                <p>Цели, активности, специальные роли и прогресс.</p>
+              </article>
+              <article className="home-stat-card">
+                <span>Темп</span>
+                <strong>Пошаговый</strong>
+                <p>Приложение помогает не запутаться и двигаться последовательно.</p>
+              </article>
+            </div>
+          </aside>
         </div>
       </div>
 

@@ -2,6 +2,19 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { getVisibleTopNavItems } from '../state/navigation'
 import { useAuth } from '../state/auth'
 
+const mobileIcons: Record<string, string> = {
+  '/home': 'ДН',
+  '/goals/my': 'ЦЛ',
+  '/specialties/my': 'СП',
+  '/achievements': 'РО',
+  '/beaver-hut': 'Х',
+  '/chat': 'Ч',
+  '/profile': 'Я',
+  '/leader': 'РК',
+  '/organizer': 'ОР',
+  '/extra': '+'
+}
+
 export function MobileBottomNav() {
   const location = useLocation()
   const { auth } = useAuth()
@@ -26,7 +39,7 @@ export function MobileBottomNav() {
         const label = item.shortLabel ?? item.label
         return (
           <NavLink key={item.path} to={item.path} className={`mobile-nav-link${isActive ? ' active' : ''}`}>
-            <span className="mobile-nav-indicator" />
+            <span className="mobile-nav-icon">{mobileIcons[item.path] ?? label.slice(0, 2)}</span>
             <span className="mobile-nav-label">{label}</span>
           </NavLink>
         )
