@@ -187,6 +187,7 @@ export const subMenus: Array<{ prefix: string; items: SubMenuItem[] }> = [
     prefix: '/organizer',
     items: [
       { label: 'Подтверждения', anchor: 'organizer-approvals' },
+      { label: 'Аналитика', anchor: 'organizer-analytics' },
       { label: 'Анонсы', anchor: 'organizer-announcements' },
       { label: 'Консультант', anchor: 'organizer-appeals' },
       { label: 'Ресурсы', anchor: 'organizer-resources' }
@@ -287,8 +288,8 @@ export const screenConfigs: ScreenConfig[] = [
   {
     path: '/organizer',
     title: 'Панель организатора',
-    description: 'Управление подтверждениями, анонсами, обращениями и ресурсами участников.',
-    badges: ['Подтверждения', 'Анонсы', 'Ресурсы']
+    description: 'Подтверждения, аналитика, анонсы, обращения и управление ресурсами участников.',
+    badges: ['Подтверждения', 'Аналитика', 'Ресурсы']
   },
   {
     path: '/leader',

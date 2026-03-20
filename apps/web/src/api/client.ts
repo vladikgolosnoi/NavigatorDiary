@@ -103,3 +103,39 @@ export async function apiFetch<T>(
 
   return parseResponse<T>(response)
 }
+
+export async function apiDownload(
+  path: string,
+  options: RequestInit = {},
+  token?: string | null
+): Promise<Blob> {
+  const url = `${API_BASE}${path.startsWith('/') ? path : `/${path}`}`
+  const headers: Record<string, string> = {
+    ...(options.headers as Record<string, string> | undefined)
+  }
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`
+  }
+
+  const response = await fetch(url, {
+    ...options,
+    headers
+  })
+
+  if (!response.ok) {
+    const body = await parseResponse<{ message?: string }>(response).catch(() => null)
+    const message =
+      (body && typeof body === 'object' && 'message' in body && body.message) ||
+      response.statusText ||
+      'Ошибка запроса'
+    const error: ApiError = {
+      message: Array.isArray(message) ? message.join(', ') : (message as string),
+      status: response.status,
+      details: body
+    }
+    throw error
+  }
+
+  return response.blob()
+}

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { BadgeRow } from '../components/BadgeRow'
-import { apiFetch, ApiError } from '../api/client'
+import { apiDownload, apiFetch, ApiError } from '../api/client'
 import { useAuth } from '../state/auth'
 import { levelLabels, resourceDescriptions, resourceLabels } from '../features/beaverHut'
 
@@ -79,6 +79,58 @@ type OrganizerAppeal = {
   messages: AppealMessage[]
 }
 
+type OrganizerAnalyticsSummary = {
+  teamsTotal: number
+  activeUsersTotal: number
+  navigatorsTotal: number
+  leadersTotal: number
+  goalsSelectedTotal: number
+  goalsAchievedTotal: number
+  specialtiesSelectedTotal: number
+  specialtiesCompletedTotal: number
+}
+
+type OrganizerAnalyticsTeamStat = {
+  teamId: string
+  teamName: string
+  city: string
+  institution: string
+  membersTotal: number
+  navigatorsTotal: number
+  leadersTotal: number
+  goalsSelected: number
+  goalsAchieved: number
+  specialtiesSelected: number
+  specialtiesCompleted: number
+  uniqueSpecialties: string[]
+}
+
+type OrganizerAnalyticsSpecialtyStat = {
+  specialtyName: string
+  level: string
+  usersTotal: number
+  teams: string[]
+}
+
+type OrganizerAnalyticsUserStat = {
+  userId: string
+  fullName: string
+  teamName: string
+  role: string
+  goalsSelected: number
+  goalsAchieved: number
+  specialtiesSelected: number
+  specialtiesCompleted: number
+}
+
+type OrganizerAnalyticsOverview = {
+  generatedAt: string
+  summary: OrganizerAnalyticsSummary
+  teamStats: OrganizerAnalyticsTeamStat[]
+  specialtyBreakdown: OrganizerAnalyticsSpecialtyStat[]
+  userStats: OrganizerAnalyticsUserStat[]
+}
+
 export function OrganizerDashboardPage() {
   const { auth } = useAuth()
   const [pendingTeams, setPendingTeams] = useState<PendingTeam[]>([])
@@ -90,6 +142,9 @@ export function OrganizerDashboardPage() {
   const [appealReplies, setAppealReplies] = useState<Record<string, string>>({})
   const [teams, setTeams] = useState<TeamOption[]>([])
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
+  const [analytics, setAnalytics] = useState<OrganizerAnalyticsOverview | null>(null)
+  const [analyticsLoading, setAnalyticsLoading] = useState(false)
+  const [exporting, setExporting] = useState<string | null>(null)
   const [selectedTeamId, setSelectedTeamId] = useState('')
   const [selectedUserId, setSelectedUserId] = useState('')
   const [awardType, setAwardType] = useState<'PARTICIPATION' | 'ACTIVE_PARTICIPATION' | 'WIN'>('PARTICIPATION')
@@ -155,6 +210,12 @@ export function OrganizerDashboardPage() {
         }
       })
       .catch((error: ApiError) => setErrorMessage(error.message || 'Не удалось загрузить команды для начислений'))
+
+    setAnalyticsLoading(true)
+    apiFetch<OrganizerAnalyticsOverview>('/analytics/organizer/overview', {}, auth.token)
+      .then(setAnalytics)
+      .catch((error: ApiError) => setErrorMessage(error.message || 'Не удалось загрузить аналитику'))
+      .finally(() => setAnalyticsLoading(false))
   }, [auth.token])
 
   useEffect(() => {
@@ -182,6 +243,33 @@ export function OrganizerDashboardPage() {
     return parts.join(' · ')
   }
 
+  const downloadExport = async (path: string, fileName: string) => {
+    if (!auth.token) {
+      setErrorMessage('Для экспорта требуется вход.')
+      return
+    }
+    setNotice('')
+    setErrorMessage('')
+    try {
+      setExporting(fileName)
+      const blob = await apiDownload(path, {}, auth.token)
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = fileName
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      setNotice(`Экспорт готов: ${fileName}`)
+    } catch (error) {
+      const apiError = error as ApiError
+      setErrorMessage(apiError.message || 'Не удалось сформировать экспорт')
+    } finally {
+      setExporting(null)
+    }
+  }
+
   const approveTeam = async (teamId: string) => {
     if (!auth.token) {
       return
@@ -192,6 +280,7 @@ export function OrganizerDashboardPage() {
       await apiFetch(`/auth/approve-team/${teamId}`, { method: 'POST' }, auth.token)
       setPendingTeams((prev) => prev.filter((team) => team.id !== teamId))
       setNotice('Команда подтверждена.')
+      loadDashboard()
     } catch (error) {
       const apiError = error as ApiError
       setErrorMessage(apiError.message || 'Не удалось подтвердить команду')
@@ -224,6 +313,7 @@ export function OrganizerDashboardPage() {
       await apiFetch(`/auth/approve-user/${userId}`, { method: 'POST' }, auth.token)
       setPendingUsers((prev) => prev.filter((user) => user.id !== userId))
       setNotice('Пользователь подтверждён.')
+      loadDashboard()
     } catch (error) {
       const apiError = error as ApiError
       setErrorMessage(apiError.message || 'Не удалось подтвердить пользователя')
@@ -256,6 +346,7 @@ export function OrganizerDashboardPage() {
       await apiFetch(`/goals/${goalId}/confirm`, { method: 'POST' }, auth.token)
       setPendingGoals((prev) => prev.filter((goal) => goal.id !== goalId))
       setNotice('Цель подтверждена.')
+      loadDashboard()
     } catch (error) {
       const apiError = error as ApiError
       setErrorMessage(apiError.message || 'Не удалось подтвердить цель')
@@ -272,6 +363,7 @@ export function OrganizerDashboardPage() {
       await apiFetch(`/specialties/${specialtyId}/confirm`, { method: 'POST' }, auth.token)
       setPendingSpecialties((prev) => prev.filter((spec) => spec.id !== specialtyId))
       setNotice('Специальность подтверждена.')
+      loadDashboard()
     } catch (error) {
       const apiError = error as ApiError
       setErrorMessage(apiError.message || 'Не удалось подтвердить специальность')
@@ -305,6 +397,7 @@ export function OrganizerDashboardPage() {
       )
       setAwardNote('')
       setNotice(`Начислено: ${response.amount} желудей каждому участнику (${response.awarded} чел.).`)
+      loadDashboard()
     } catch (error) {
       const apiError = error as ApiError
       setErrorMessage(apiError.message || 'Не удалось начислить жёлуди')
@@ -350,6 +443,7 @@ export function OrganizerDashboardPage() {
       setNotice(
         `${response.resourceLabel}: ${response.amount > 0 ? 'начислено' : 'списано'} ${Math.abs(response.amount)}.`
       )
+      loadDashboard()
     } catch (error) {
       const apiError = error as ApiError
       setErrorMessage(apiError.message || 'Не удалось скорректировать баланс')
@@ -478,13 +572,24 @@ export function OrganizerDashboardPage() {
     }
   }
 
+  const analyticsCards = analytics
+    ? [
+        { label: 'Команды', value: analytics.summary.teamsTotal },
+        { label: 'Активные участники', value: analytics.summary.activeUsersTotal },
+        { label: 'Выбрано целей', value: analytics.summary.goalsSelectedTotal },
+        { label: 'Достигнуто целей', value: analytics.summary.goalsAchievedTotal },
+        { label: 'Выбрано специальностей', value: analytics.summary.specialtiesSelectedTotal },
+        { label: 'Подтверждено специальностей', value: analytics.summary.specialtiesCompletedTotal }
+      ]
+    : []
+
   return (
     <section className="screen">
       <header className="screen-header">
         <div>
           <h1>Панель организатора</h1>
-          <p>Подтверждения, анонсы, обращения и управление ресурсами участников на одной странице.</p>
-          <BadgeRow items={['Подтверждения', 'Анонсы', 'Ресурсы']} />
+          <p>Подтверждения, аналитика, анонсы, обращения и управление ресурсами участников на одной странице.</p>
+          <BadgeRow items={['Подтверждения', 'Аналитика', 'Ресурсы']} />
         </div>
         <div className="screen-actions">
           <button className="btn primary" onClick={loadDashboard}>
@@ -593,6 +698,142 @@ export function OrganizerDashboardPage() {
             <p>Нет специальностей для подтверждения.</p>
           )}
         </article>
+      </div>
+
+      <div className="card-grid" id="organizer-analytics">
+        <article className="card highlight">
+          <h3>Сводка по активности</h3>
+          <p className="hint">
+            Здесь видно, кто из каких команд выбирает специальности и сколько целей находится в работе или уже достигнуто.
+          </p>
+          {analyticsLoading ? (
+            <p>Загружаю сводку...</p>
+          ) : analytics ? (
+            <div className="analytics-summary-grid">
+              {analyticsCards.map((item) => (
+                <div key={item.label} className="analytics-stat">
+                  <span>{item.label}</span>
+                  <strong>{item.value}</strong>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p>Сводка пока недоступна.</p>
+          )}
+        </article>
+
+        <article className="card">
+          <h3>По командам</h3>
+          {analytics?.teamStats.length ? (
+            <div className="analytics-table">
+              {analytics.teamStats.map((team) => (
+                <div key={team.teamId} className="analytics-row">
+                  <div className="analytics-row-main">
+                    <strong>{team.teamName}</strong>
+                    <p>
+                      {team.city} · {team.institution}
+                    </p>
+                    <small>
+                      Участники: {team.membersTotal} · Навигаторы: {team.navigatorsTotal} · Руководители: {team.leadersTotal}
+                    </small>
+                  </div>
+                  <div className="analytics-metric">
+                    <span>Цели</span>
+                    <strong>
+                      {team.goalsAchieved} / {team.goalsSelected}
+                    </strong>
+                  </div>
+                  <div className="analytics-metric">
+                    <span>Спец.</span>
+                    <strong>
+                      {team.specialtiesCompleted} / {team.specialtiesSelected}
+                    </strong>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p>Пока нет данных по командам.</p>
+          )}
+        </article>
+
+        <article className="card">
+          <h3>Выбор специальностей</h3>
+          {analytics?.specialtyBreakdown.length ? (
+            <div className="stack-list">
+              {analytics.specialtyBreakdown.slice(0, 8).map((item) => (
+                <div key={`${item.specialtyName}-${item.level}`} className="stack-item">
+                  <div>
+                    <strong>
+                      {item.specialtyName} · {item.level}
+                    </strong>
+                    <p>Команд: {item.teams.length}</p>
+                  </div>
+                  <div className="stack-actions">
+                    <span className="pill">{item.usersTotal} участников</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p>Пока нет выбранных специальностей.</p>
+          )}
+        </article>
+
+        <article className="card">
+          <h3>Кто уже продвигается лучше всех</h3>
+          {analytics?.userStats.length ? (
+            <div className="stack-list">
+              {analytics.userStats.slice(0, 8).map((user) => (
+                <div key={user.userId} className="stack-item">
+                  <div>
+                    <strong>{user.fullName}</strong>
+                    <p>
+                      {user.teamName} · {user.role}
+                    </p>
+                  </div>
+                  <div className="stack-actions">
+                    <span className="pill">Цели: {user.goalsAchieved} / {user.goalsSelected}</span>
+                    <span className="pill accent">
+                      Спец.: {user.specialtiesCompleted} / {user.specialtiesSelected}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p>Пока нет данных по пользователям.</p>
+          )}
+        </article>
+
+        <div className="form-card">
+          <h3>Экспорт CSV</h3>
+          <p>Можно быстро выгрузить таблицы для отчёта, сверки по командам и внешней аналитики.</p>
+          <button
+            className="btn primary"
+            type="button"
+            onClick={() => downloadExport('/analytics/organizer/export/team-summary', 'navigator-team-summary.csv')}
+            disabled={exporting !== null}
+          >
+            {exporting === 'navigator-team-summary.csv' ? 'Готовлю...' : 'Экспорт по командам'}
+          </button>
+          <button
+            className="btn ghost"
+            type="button"
+            onClick={() => downloadExport('/analytics/organizer/export/goals', 'navigator-goals.csv')}
+            disabled={exporting !== null}
+          >
+            {exporting === 'navigator-goals.csv' ? 'Готовлю...' : 'Экспорт по целям'}
+          </button>
+          <button
+            className="btn ghost"
+            type="button"
+            onClick={() => downloadExport('/analytics/organizer/export/specialties', 'navigator-specialties.csv')}
+            disabled={exporting !== null}
+          >
+            {exporting === 'navigator-specialties.csv' ? 'Готовлю...' : 'Экспорт по специальностям'}
+          </button>
+        </div>
       </div>
 
       <div className="card-grid">

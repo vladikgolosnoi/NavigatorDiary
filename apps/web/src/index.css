@@ -1544,6 +1544,88 @@ button {
   letter-spacing: -0.03em;
 }
 
+.analytics-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(138px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.analytics-stat {
+  padding: 14px 15px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(13, 83, 125, 0.08);
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.analytics-stat span {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+
+.analytics-stat strong {
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--primary);
+}
+
+.analytics-table {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.analytics-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(96px, 0.5fr) minmax(96px, 0.5fr);
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: 22px;
+  border: 1px solid rgba(13, 83, 125, 0.08);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: var(--shadow-soft);
+}
+
+.analytics-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.analytics-row-main p,
+.analytics-row-main small {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.analytics-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.analytics-metric span {
+  font-size: 0.76rem;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.analytics-metric strong {
+  font-size: 1.1rem;
+  color: var(--primary);
+}
+
 .card textarea {
   width: 100%;
   min-height: 120px;
@@ -2130,6 +2212,15 @@ button {
   .state-grid,
   .form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .analytics-row {
+    grid-template-columns: 1fr;
+  }
+
+  .analytics-metric {
+    align-items: flex-start;
+    text-align: left;
   }
 
   .card,

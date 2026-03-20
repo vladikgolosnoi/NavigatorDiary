@@ -19,6 +19,7 @@ import { AppealsModule } from './appeals/appeals.module'
 import { AuditModule } from './audit/audit.module'
 import { TeamsModule } from './teams/teams.module'
 import { BeaverHutModule } from './beaver-hut/beaver-hut.module'
+import { AnalyticsModule } from './analytics/analytics.module'
 
 @Module({
   imports: [
@@ -36,7 +37,8 @@ import { BeaverHutModule } from './beaver-hut/beaver-hut.module'
     AppealsModule,
     AuditModule,
     TeamsModule,
-    BeaverHutModule
+    BeaverHutModule,
+    AnalyticsModule
   ],
   controllers: [AppController],
   providers: [
