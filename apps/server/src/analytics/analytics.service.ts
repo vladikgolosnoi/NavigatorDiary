@@ -53,6 +53,14 @@ type UserSummary = {
   specialtiesCompleted: number
 }
 
+type AnalyticsFilters = {
+  teamId?: string | null
+  role?: RoleName | null
+  goalStatus?: GoalStatus | null
+  specialtyStatus?: SpecialtyStatus | null
+  specialtyLevel?: SpecialtyLevelName | null
+}
+
 function csvEscape(value: string | number | null | undefined) {
   const text = value == null ? '' : String(value)
   if (/[",;\n]/.test(text)) {
@@ -73,18 +81,30 @@ function formatDate(value: Date | null | undefined) {
 export class AnalyticsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async loadAnalyticsData(teamId?: string | null) {
+  private normalizeFilters(filters?: AnalyticsFilters): Required<AnalyticsFilters> {
+    return {
+      teamId: filters?.teamId ?? null,
+      role: filters?.role ?? null,
+      goalStatus: filters?.goalStatus ?? null,
+      specialtyStatus: filters?.specialtyStatus ?? null,
+      specialtyLevel: filters?.specialtyLevel ?? null
+    }
+  }
+
+  private async loadAnalyticsData(filters?: AnalyticsFilters) {
+    const normalized = this.normalizeFilters(filters)
     const activeTeamFilter = {
       team: { status: TeamStatus.ACTIVE },
       status: UserStatus.ACTIVE,
-      teamId: teamId ?? { not: null as string | null }
+      teamId: normalized.teamId ?? { not: null as string | null },
+      ...(normalized.role ? { role: { name: normalized.role } } : {})
     }
 
     const [teams, users, goals, specialties] = await Promise.all([
       this.prisma.team.findMany({
         where: {
           status: TeamStatus.ACTIVE,
-          ...(teamId ? { id: teamId } : {})
+          ...(normalized.teamId ? { id: normalized.teamId } : {})
         },
         orderBy: { name: 'asc' },
         select: {
@@ -114,7 +134,10 @@ export class AnalyticsService {
         }
       }),
       this.prisma.userGoal.findMany({
-        where: { user: activeTeamFilter },
+        where: {
+          user: activeTeamFilter,
+          ...(normalized.goalStatus ? { status: normalized.goalStatus } : {})
+        },
         orderBy: [{ user: { lastName: 'asc' } }, { createdAt: 'desc' }],
         select: {
           id: true,
@@ -165,7 +188,10 @@ export class AnalyticsService {
       this.prisma.userSpecialty.findMany({
         where: {
           user: activeTeamFilter,
-          status: { in: [SpecialtyStatus.ACTIVE, SpecialtyStatus.COMPLETED] }
+          status: normalized.specialtyStatus
+            ? normalized.specialtyStatus
+            : { in: [SpecialtyStatus.ACTIVE, SpecialtyStatus.COMPLETED] },
+          ...(normalized.specialtyLevel ? { level: { name: normalized.specialtyLevel } } : {})
         },
         orderBy: [{ user: { lastName: 'asc' } }, { startedAt: 'desc' }],
         select: {
@@ -209,11 +235,11 @@ export class AnalyticsService {
       })
     ])
 
-    return { teams, users, goals, specialties }
+    return { teams, users, goals, specialties, filters: normalized }
   }
 
-  async getOrganizerOverview(teamId?: string | null) {
-    const { teams, users, goals, specialties } = await this.loadAnalyticsData(teamId)
+  async getOrganizerOverview(filters?: AnalyticsFilters) {
+    const { teams, users, goals, specialties, filters: normalized } = await this.loadAnalyticsData(filters)
 
     const teamMap = new Map<string, TeamSummary>()
     teams.forEach((team) => {
@@ -337,6 +363,7 @@ export class AnalyticsService {
 
     return {
       generatedAt: new Date().toISOString(),
+      filters: normalized,
       summary: {
         teamsTotal: teamStats.length,
         activeUsersTotal: users.length,
@@ -374,6 +401,21 @@ export class AnalyticsService {
           usersTotal: item.usersTotal,
           teams: Array.from(item.teams).sort((left, right) => left.localeCompare(right, 'ru'))
         })),
+      goalStatusBreakdown: Object.values(GoalStatus).map((status) => ({
+        status,
+        label: goalStatusLabels[status],
+        count: goals.filter((goal) => goal.status === status).length
+      })),
+      specialtyStatusBreakdown: Object.values(SpecialtyStatus).map((status) => ({
+        status,
+        label: specialtyStatusLabels[status],
+        count: specialties.filter((specialty) => specialty.status === status).length
+      })),
+      specialtyLevelBreakdown: Object.values(SpecialtyLevelName).map((level) => ({
+        level,
+        label: specialtyLevelLabels[level],
+        count: specialties.filter((specialty) => specialty.level.name === level).length
+      })),
       userStats: Array.from(userMap.values())
         .sort((left, right) => {
           if (right.goalsAchieved !== left.goalsAchieved) {
@@ -384,12 +426,45 @@ export class AnalyticsService {
           }
           return left.fullName.localeCompare(right.fullName, 'ru')
         })
-        .slice(0, 12)
+        .slice(0, 12),
+      goalRows: goals.slice(0, 12).map((goal) => ({
+        id: goal.id,
+        userId: goal.user.id,
+        fullName: `${goal.user.lastName} ${goal.user.firstName}`.trim(),
+        teamName: goal.user.team?.name ?? '',
+        role: roleLabels[goal.user.role.name],
+        goalName: goal.goal.name,
+        competencyName: goal.goal.competency.name,
+        sphereName: goal.goal.competency.sphere.name,
+        status: goal.status,
+        statusLabel: goalStatusLabels[goal.status],
+        reactions: goal.reactions.length,
+        lastProgressAt: formatDate(goal.progress[0]?.createdAt),
+        achievedAt: formatDate(goal.achievedAt),
+        confirmedAt: formatDate(goal.confirmedAt)
+      })),
+      specialtyRows: specialties.slice(0, 12).map((specialty) => ({
+        id: specialty.id,
+        userId: specialty.user.id,
+        fullName: `${specialty.user.lastName} ${specialty.user.firstName}`.trim(),
+        teamName: specialty.user.team?.name ?? '',
+        role: roleLabels[specialty.user.role.name],
+        specialtyName: specialty.specialty.name,
+        level: specialty.level.name,
+        levelLabel: specialtyLevelLabels[specialty.level.name],
+        status: specialty.status,
+        statusLabel: specialtyStatusLabels[specialty.status],
+        checklistDone: specialty.checklist.length,
+        checklistTotal: specialty.level.checklist.length,
+        startedAt: formatDate(specialty.startedAt),
+        completedAt: formatDate(specialty.completedAt),
+        confirmedAt: formatDate(specialty.confirmedAt)
+      }))
     }
   }
 
-  async exportTeamSummaryCsv(teamId?: string | null) {
-    const overview = await this.getOrganizerOverview(teamId)
+  async exportTeamSummaryCsv(filters?: AnalyticsFilters) {
+    const overview = await this.getOrganizerOverview(filters)
     return buildCsv(
       [
         'Команда',
@@ -420,8 +495,8 @@ export class AnalyticsService {
     )
   }
 
-  async exportGoalsCsv(teamId?: string | null) {
-    const { goals } = await this.loadAnalyticsData(teamId)
+  async exportGoalsCsv(filters?: AnalyticsFilters) {
+    const { goals } = await this.loadAnalyticsData(filters)
 
     return buildCsv(
       [
@@ -455,8 +530,8 @@ export class AnalyticsService {
     )
   }
 
-  async exportSpecialtiesCsv(teamId?: string | null) {
-    const { specialties } = await this.loadAnalyticsData(teamId)
+  async exportSpecialtiesCsv(filters?: AnalyticsFilters) {
+    const { specialties } = await this.loadAnalyticsData(filters)
 
     return buildCsv(
       [

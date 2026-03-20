@@ -1551,6 +1551,20 @@ button {
   margin-top: 14px;
 }
 
+.analytics-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 16px 0 12px;
+}
+
+.analytics-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
 .analytics-stat {
   padding: 14px 15px;
   border-radius: 20px;
@@ -1591,6 +1605,10 @@ button {
   border: 1px solid rgba(13, 83, 125, 0.08);
   background: rgba(255, 255, 255, 0.88);
   box-shadow: var(--shadow-soft);
+}
+
+.analytics-row.analytics-row-detailed {
+  grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(90px, 0.45fr));
 }
 
 .analytics-row-main {
@@ -2215,6 +2233,10 @@ button {
   }
 
   .analytics-row {
+    grid-template-columns: 1fr;
+  }
+
+  .analytics-row.analytics-row-detailed {
     grid-template-columns: 1fr;
   }
 

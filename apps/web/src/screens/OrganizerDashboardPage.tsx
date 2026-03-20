@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { BadgeRow } from '../components/BadgeRow'
 import { apiDownload, apiFetch, ApiError } from '../api/client'
 import { useAuth } from '../state/auth'
@@ -125,10 +125,61 @@ type OrganizerAnalyticsUserStat = {
 
 type OrganizerAnalyticsOverview = {
   generatedAt: string
+  filters: {
+    teamId: string | null
+    role: 'ORGANIZER' | 'LEADER' | 'NAVIGATOR' | null
+    goalStatus: 'SELECTED' | 'IN_PROGRESS' | 'PENDING_CONFIRMATION' | 'ACHIEVED' | null
+    specialtyStatus: 'ACTIVE' | 'COMPLETED' | 'CANCELLED' | null
+    specialtyLevel: 'BRONZE' | 'SILVER' | 'GOLD' | null
+  }
   summary: OrganizerAnalyticsSummary
   teamStats: OrganizerAnalyticsTeamStat[]
   specialtyBreakdown: OrganizerAnalyticsSpecialtyStat[]
+  goalStatusBreakdown: { status: string; label: string; count: number }[]
+  specialtyStatusBreakdown: { status: string; label: string; count: number }[]
+  specialtyLevelBreakdown: { level: string; label: string; count: number }[]
   userStats: OrganizerAnalyticsUserStat[]
+  goalRows: Array<{
+    id: string
+    userId: string
+    fullName: string
+    teamName: string
+    role: string
+    goalName: string
+    competencyName: string
+    sphereName: string
+    status: string
+    statusLabel: string
+    reactions: number
+    lastProgressAt: string
+    achievedAt: string
+    confirmedAt: string
+  }>
+  specialtyRows: Array<{
+    id: string
+    userId: string
+    fullName: string
+    teamName: string
+    role: string
+    specialtyName: string
+    level: string
+    levelLabel: string
+    status: string
+    statusLabel: string
+    checklistDone: number
+    checklistTotal: number
+    startedAt: string
+    completedAt: string
+    confirmedAt: string
+  }>
+}
+
+type AnalyticsFilterState = {
+  teamId: string
+  role: '' | 'ORGANIZER' | 'LEADER' | 'NAVIGATOR'
+  goalStatus: '' | 'SELECTED' | 'IN_PROGRESS' | 'PENDING_CONFIRMATION' | 'ACHIEVED'
+  specialtyStatus: '' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED'
+  specialtyLevel: '' | 'BRONZE' | 'SILVER' | 'GOLD'
 }
 
 export function OrganizerDashboardPage() {
@@ -145,7 +196,13 @@ export function OrganizerDashboardPage() {
   const [analytics, setAnalytics] = useState<OrganizerAnalyticsOverview | null>(null)
   const [analyticsLoading, setAnalyticsLoading] = useState(false)
   const [exporting, setExporting] = useState<string | null>(null)
-  const [selectedAnalyticsTeamId, setSelectedAnalyticsTeamId] = useState('')
+  const [analyticsFilters, setAnalyticsFilters] = useState<AnalyticsFilterState>({
+    teamId: '',
+    role: '',
+    goalStatus: '',
+    specialtyStatus: '',
+    specialtyLevel: ''
+  })
   const [selectedTeamId, setSelectedTeamId] = useState('')
   const [selectedUserId, setSelectedUserId] = useState('')
   const [awardType, setAwardType] = useState<'PARTICIPATION' | 'ACTIVE_PARTICIPATION' | 'WIN'>('PARTICIPATION')
@@ -162,6 +219,27 @@ export function OrganizerDashboardPage() {
 
   const [notice, setNotice] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
+
+  const analyticsQueryString = useMemo(() => {
+    const params = new URLSearchParams()
+    if (analyticsFilters.teamId) {
+      params.set('teamId', analyticsFilters.teamId)
+    }
+    if (analyticsFilters.role) {
+      params.set('role', analyticsFilters.role)
+    }
+    if (analyticsFilters.goalStatus) {
+      params.set('goalStatus', analyticsFilters.goalStatus)
+    }
+    if (analyticsFilters.specialtyStatus) {
+      params.set('specialtyStatus', analyticsFilters.specialtyStatus)
+    }
+    if (analyticsFilters.specialtyLevel) {
+      params.set('specialtyLevel', analyticsFilters.specialtyLevel)
+    }
+    const raw = params.toString()
+    return raw ? `?${raw}` : ''
+  }, [analyticsFilters])
 
   const loadDashboard = useCallback(() => {
     if (!auth.token) {
@@ -213,15 +291,12 @@ export function OrganizerDashboardPage() {
       .catch((error: ApiError) => setErrorMessage(error.message || 'Не удалось загрузить команды для начислений'))
 
     setAnalyticsLoading(true)
-    const analyticsPath = selectedAnalyticsTeamId
-      ? `/analytics/organizer/overview?teamId=${selectedAnalyticsTeamId}`
-      : '/analytics/organizer/overview'
-
+    const analyticsPath = `/analytics/organizer/overview${analyticsQueryString}`
     apiFetch<OrganizerAnalyticsOverview>(analyticsPath, {}, auth.token)
       .then(setAnalytics)
       .catch((error: ApiError) => setErrorMessage(error.message || 'Не удалось загрузить аналитику'))
       .finally(() => setAnalyticsLoading(false))
-  }, [auth.token, selectedAnalyticsTeamId])
+  }, [analyticsQueryString, auth.token])
 
   useEffect(() => {
     loadDashboard()
@@ -257,7 +332,7 @@ export function OrganizerDashboardPage() {
     setErrorMessage('')
     try {
       setExporting(fileName)
-      const exportPath = selectedAnalyticsTeamId ? `${path}?teamId=${selectedAnalyticsTeamId}` : path
+      const exportPath = `${path}${analyticsQueryString}`
       const blob = await apiDownload(exportPath, {}, auth.token)
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
@@ -578,6 +653,38 @@ export function OrganizerDashboardPage() {
     }
   }
 
+  const analyticsRoleOptions = [
+    { value: '', label: 'Все роли' },
+    { value: 'NAVIGATOR', label: 'Навигаторы' },
+    { value: 'LEADER', label: 'Руководители' },
+    { value: 'ORGANIZER', label: 'Организаторы' }
+  ] as const
+
+  const goalStatusOptions = [
+    { value: '', label: 'Все статусы целей' },
+    { value: 'SELECTED', label: 'Выбрана' },
+    { value: 'IN_PROGRESS', label: 'В процессе' },
+    { value: 'PENDING_CONFIRMATION', label: 'На подтверждении' },
+    { value: 'ACHIEVED', label: 'Достигнута' }
+  ] as const
+
+  const specialtyStatusOptions = [
+    { value: '', label: 'Все статусы специальностей' },
+    { value: 'ACTIVE', label: 'В работе' },
+    { value: 'COMPLETED', label: 'Освоена' },
+    { value: 'CANCELLED', label: 'Снята' }
+  ] as const
+
+  const specialtyLevelOptions = [
+    { value: '', label: 'Все уровни' },
+    { value: 'BRONZE', label: 'Бронза' },
+    { value: 'SILVER', label: 'Серебро' },
+    { value: 'GOLD', label: 'Золото' }
+  ] as const
+
+  const formatDisplayDate = (value: string) =>
+    value ? new Date(value).toLocaleDateString('ru-RU') : '—'
+
   const analyticsCards = analytics
     ? [
         { label: 'Команды', value: analytics.summary.teamsTotal },
@@ -712,32 +819,152 @@ export function OrganizerDashboardPage() {
           <p className="hint">
             Здесь видно, кто из каких команд выбирает специальности и сколько целей находится в работе или уже достигнуто.
           </p>
-          <label className="field">
-            Команда
-            <select
-              className="input"
-              value={selectedAnalyticsTeamId}
-              onChange={(event) => setSelectedAnalyticsTeamId(event.target.value)}
+          <div className="analytics-filters">
+            <label className="field">
+              Команда
+              <select
+                className="input"
+                value={analyticsFilters.teamId}
+                onChange={(event) =>
+                  setAnalyticsFilters((prev) => ({
+                    ...prev,
+                    teamId: event.target.value
+                  }))
+                }
+              >
+                <option value="">Все команды</option>
+                {teams.map((team) => (
+                  <option key={team.id} value={team.id}>
+                    {team.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field">
+              Роль
+              <select
+                className="input"
+                value={analyticsFilters.role}
+                onChange={(event) =>
+                  setAnalyticsFilters((prev) => ({
+                    ...prev,
+                    role: event.target.value as AnalyticsFilterState['role']
+                  }))
+                }
+              >
+                {analyticsRoleOptions.map((option) => (
+                  <option key={option.label} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field">
+              Статус цели
+              <select
+                className="input"
+                value={analyticsFilters.goalStatus}
+                onChange={(event) =>
+                  setAnalyticsFilters((prev) => ({
+                    ...prev,
+                    goalStatus: event.target.value as AnalyticsFilterState['goalStatus']
+                  }))
+                }
+              >
+                {goalStatusOptions.map((option) => (
+                  <option key={option.label} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field">
+              Статус специальности
+              <select
+                className="input"
+                value={analyticsFilters.specialtyStatus}
+                onChange={(event) =>
+                  setAnalyticsFilters((prev) => ({
+                    ...prev,
+                    specialtyStatus: event.target.value as AnalyticsFilterState['specialtyStatus']
+                  }))
+                }
+              >
+                {specialtyStatusOptions.map((option) => (
+                  <option key={option.label} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field">
+              Уровень специальности
+              <select
+                className="input"
+                value={analyticsFilters.specialtyLevel}
+                onChange={(event) =>
+                  setAnalyticsFilters((prev) => ({
+                    ...prev,
+                    specialtyLevel: event.target.value as AnalyticsFilterState['specialtyLevel']
+                  }))
+                }
+              >
+                {specialtyLevelOptions.map((option) => (
+                  <option key={option.label} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div className="stack-actions">
+            <button
+              className="btn ghost"
+              type="button"
+              onClick={() =>
+                setAnalyticsFilters({
+                  teamId: '',
+                  role: '',
+                  goalStatus: '',
+                  specialtyStatus: '',
+                  specialtyLevel: ''
+                })
+              }
             >
-              <option value="">Все команды</option>
-              {teams.map((team) => (
-                <option key={team.id} value={team.id}>
-                  {team.name}
-                </option>
-              ))}
-            </select>
-          </label>
+              Сбросить фильтры
+            </button>
+            {analytics ? <span className="pill">Обновлено: {formatDisplayDate(analytics.generatedAt)}</span> : null}
+          </div>
           {analyticsLoading ? (
             <p>Загружаю сводку...</p>
           ) : analytics ? (
-            <div className="analytics-summary-grid">
-              {analyticsCards.map((item) => (
-                <div key={item.label} className="analytics-stat">
-                  <span>{item.label}</span>
-                  <strong>{item.value}</strong>
-                </div>
-              ))}
-            </div>
+            <>
+              <div className="analytics-summary-grid">
+                {analyticsCards.map((item) => (
+                  <div key={item.label} className="analytics-stat">
+                    <span>{item.label}</span>
+                    <strong>{item.value}</strong>
+                  </div>
+                ))}
+              </div>
+              <div className="analytics-chip-grid">
+                {analytics.goalStatusBreakdown.map((item) => (
+                  <span key={`goal-${item.status}`} className="pill">
+                    {item.label}: {item.count}
+                  </span>
+                ))}
+                {analytics.specialtyStatusBreakdown.map((item) => (
+                  <span key={`specialty-${item.status}`} className="pill accent">
+                    {item.label}: {item.count}
+                  </span>
+                ))}
+                {analytics.specialtyLevelBreakdown.map((item) => (
+                  <span key={`level-${item.level}`} className="pill">
+                    {item.label}: {item.count}
+                  </span>
+                ))}
+              </div>
+            </>
           ) : (
             <p>Сводка пока недоступна.</p>
           )}
@@ -827,11 +1054,83 @@ export function OrganizerDashboardPage() {
           )}
         </article>
 
+        <article className="card">
+          <h3>Детали по целям</h3>
+          {analytics?.goalRows.length ? (
+            <div className="analytics-table">
+              {analytics.goalRows.map((row) => (
+                <div key={row.id} className="analytics-row analytics-row-detailed">
+                  <div className="analytics-row-main">
+                    <strong>{row.goalName}</strong>
+                    <p>
+                      {row.fullName} · {row.teamName || 'Без команды'} · {row.role}
+                    </p>
+                    <small>
+                      {row.sphereName} · {row.competencyName}
+                    </small>
+                  </div>
+                  <div className="analytics-metric">
+                    <span>Статус</span>
+                    <strong>{row.statusLabel}</strong>
+                  </div>
+                  <div className="analytics-metric">
+                    <span>Реакции</span>
+                    <strong>{row.reactions}</strong>
+                  </div>
+                  <div className="analytics-metric">
+                    <span>Прогресс</span>
+                    <strong>{formatDisplayDate(row.lastProgressAt)}</strong>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p>По текущим фильтрам целей не найдено.</p>
+          )}
+        </article>
+
+        <article className="card">
+          <h3>Детали по специальностям</h3>
+          {analytics?.specialtyRows.length ? (
+            <div className="analytics-table">
+              {analytics.specialtyRows.map((row) => (
+                <div key={row.id} className="analytics-row analytics-row-detailed">
+                  <div className="analytics-row-main">
+                    <strong>
+                      {row.specialtyName} · {row.levelLabel}
+                    </strong>
+                    <p>
+                      {row.fullName} · {row.teamName || 'Без команды'} · {row.role}
+                    </p>
+                    <small>
+                      Чек-лист: {row.checklistDone} / {row.checklistTotal}
+                    </small>
+                  </div>
+                  <div className="analytics-metric">
+                    <span>Статус</span>
+                    <strong>{row.statusLabel}</strong>
+                  </div>
+                  <div className="analytics-metric">
+                    <span>Начата</span>
+                    <strong>{formatDisplayDate(row.startedAt)}</strong>
+                  </div>
+                  <div className="analytics-metric">
+                    <span>Подтверждена</span>
+                    <strong>{formatDisplayDate(row.confirmedAt)}</strong>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p>По текущим фильтрам специальностей не найдено.</p>
+          )}
+        </article>
+
         <div className="form-card">
           <h3>Экспорт CSV</h3>
           <p>
             Можно быстро выгрузить таблицы для отчёта, сверки по командам и внешней аналитики.
-            {selectedAnalyticsTeamId ? ' Сейчас экспорт будет только по выбранной команде.' : ' Сейчас экспорт идет по всему проекту.'}
+            {analyticsQueryString ? ' Сейчас экспорт учитывает выбранные фильтры.' : ' Сейчас экспорт идет по всему проекту.'}
           </p>
           <button
             className="btn primary"
