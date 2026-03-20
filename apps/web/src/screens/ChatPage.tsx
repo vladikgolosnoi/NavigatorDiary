@@ -72,11 +72,16 @@ export function ChatPage() {
   }, [loadMessages])
 
   useEffect(() => {
-    if (!teamId) {
+    if (!auth.token || !teamId) {
       return
     }
     const socket = io(getApiOrigin(), {
-      transports: ['websocket']
+      transports: ['polling', 'websocket'],
+      auth: {
+        token: auth.token
+      },
+      timeout: 6000,
+      reconnectionAttempts: 3
     })
     socketRef.current = socket
 
@@ -107,7 +112,7 @@ export function ChatPage() {
       socket.disconnect()
       socketRef.current = null
     }
-  }, [teamId])
+  }, [auth.token, teamId])
 
   const sendMessage = async () => {
     if (!auth.token) {
