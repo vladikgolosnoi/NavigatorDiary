@@ -107,9 +107,10 @@ export const subMenus: Array<{ prefix: string; items: SubMenuItem[] }> = [
   {
     prefix: '/home',
     items: [
-      { label: 'О проекте', anchor: 'home-welcome' },
+      { label: 'Приветствие', anchor: 'home-welcome' },
+      { label: 'Сайт', anchor: 'home-project' },
       { label: 'Анонсы', anchor: 'home-announcements', roles: ['LEADER', 'NAVIGATOR'] },
-      { label: 'Сферы развития', anchor: 'home-spheres', roles: ['LEADER', 'NAVIGATOR'] },
+      { label: 'Активности', anchor: 'home-spheres', roles: ['LEADER', 'NAVIGATOR'] },
       { label: 'Партнеры', anchor: 'home-partners' }
     ]
   },

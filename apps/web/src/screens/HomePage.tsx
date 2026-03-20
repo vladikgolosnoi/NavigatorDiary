@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { apiFetch } from '../api/client'
 import { LogoCluster } from '../components/LogoCluster'
+import { SupportFooter } from '../components/SupportFooter'
 import { useAuth } from '../state/auth'
 import partnerEducation from '../assets/partners/education-rostov.png'
 import partnerDtdm from '../assets/partners/dtdm-rostov.jpg'
 import partnerDgtu from '../assets/partners/dgtu-hearts.png'
 import partnerLibi from '../assets/partners/libi.png'
+import logoDruzhina from '../assets/brand/logo-druzhina-clean.png'
 
 const sphereLinks = {
   intellectual: 'https://rsdmo.ru/page95471836.html',
@@ -69,49 +71,30 @@ export function HomePage() {
   return (
     <section className="screen home-screen">
       <div className="home-hero" id="home-welcome">
-        <div className="home-hero-grid">
-          <div className="home-copy">
-            <span className="section-kicker">Мобильный дневник движения</span>
-            <h1>Главная</h1>
-            <p>
-              Приветствуем вас в движении &laquo;Дружина навигаторов&raquo; Ростовского Союза
-              детских и молодежных организаций! Участвовать легко, соберите команду навигаторов в
-              составе от 7 до 9 человек и 1 взрослого. Участники команд организуют активности и
-              выполняют вызовы, развивая личные качества, приобретая полезные навыки и просто
-              веселясь. Активности можно выбрать по сферам развития, исходя из своих интересов.
-            </p>
-            <div className="home-meta-row">
-              <span className="home-meta-pill">7–9 навигаторов</span>
-              <span className="home-meta-pill">1 взрослый</span>
-              <span className="home-meta-pill">6 сфер развития</span>
-            </div>
-          </div>
-
-          <aside className="home-hero-side">
-            <div className="home-hero-side__head">
-              <span className="section-kicker">Маршрут участия</span>
-              <strong>От команды к достижениям</strong>
-            </div>
-            <div className="home-hero-stats">
-              <article className="home-stat-card">
-                <span>Формат</span>
-                <strong>Командный</strong>
-                <p>Растите вместе, а не поодиночке.</p>
-              </article>
-              <article className="home-stat-card">
-                <span>Фокус</span>
-                <strong>Навыки + характер</strong>
-                <p>Цели, активности, специальные роли и прогресс.</p>
-              </article>
-              <article className="home-stat-card">
-                <span>Темп</span>
-                <strong>Пошаговый</strong>
-                <p>Приложение помогает не запутаться и двигаться последовательно.</p>
-              </article>
-            </div>
-          </aside>
+        <div className="home-copy">
+          <h1>Главная</h1>
+          <p>
+            Приветствуем вас в движении &laquo;Дружина навигаторов&raquo; Ростовского Союза
+            детских и молодежных организаций!
+            <br />
+            Участвовать легко, соберите команду навигаторов в составе от 7 до 9 человек и 1
+            взрослого. Участники команд организуют активности и выполняют вызовы, развивая личные
+            качества, приобретая полезные навыки и просто веселясь. Активности можно выбрать по
+            сферам развития, исходя из своих интересов.
+          </p>
         </div>
       </div>
+
+      <section className="card home-project-card" id="home-project">
+        <div className="home-project-card__copy">
+          <h2>Сайт проекта</h2>
+          <p>Откройте официальный сайт движения, чтобы посмотреть материалы и новости проекта.</p>
+        </div>
+        <a className="home-project-link" href={projectLink} target="_blank" rel="noreferrer" aria-label="Сайт проекта">
+          <img src={logoDruzhina} alt="Дружина навигаторов" />
+          <span>Открыть сайт</span>
+        </a>
+      </section>
 
       {showSphereLinks ? (
         <div className="card-grid home-announcements-grid" id="home-announcements">
@@ -149,21 +132,21 @@ export function HomePage() {
         </div>
       ) : null}
 
-      {showSphereLinks ? <p className="home-note">Здесь ты можешь выбрать понравившуюся активность.</p> : null}
-
-      <div className="home-brand-panel" id="home-spheres">
-        <LogoCluster
-          showIcons={showSphereLinks}
-          sphereLinks={showSphereLinks ? sphereLinks : undefined}
-          mainLink={projectLink}
-        />
-      </div>
+      {showSphereLinks ? (
+        <section className="card home-brand-panel" id="home-spheres">
+          <div className="partners-head">
+            <div>
+              <h2>Активности</h2>
+            </div>
+          </div>
+          <LogoCluster showMain={false} compact sphereLinks={sphereLinks} />
+        </section>
+      ) : null}
 
       <section className="card partners-panel" id="home-partners">
         <div className="partners-head">
           <div>
             <h2>Партнеры</h2>
-            <p>Организации, которые поддерживают проект и помогают проводить активности.</p>
           </div>
         </div>
         <div className="partners-grid">
@@ -175,6 +158,8 @@ export function HomePage() {
           ))}
         </div>
       </section>
+
+      <SupportFooter />
     </section>
   )
 }

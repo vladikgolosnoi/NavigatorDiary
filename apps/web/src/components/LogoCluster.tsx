@@ -19,11 +19,19 @@ type DevelopmentIconKey = (typeof developmentIcons)[number]['key']
 
 type LogoClusterProps = {
   showIcons?: boolean
+  showMain?: boolean
+  compact?: boolean
   sphereLinks?: Partial<Record<DevelopmentIconKey, string>>
   mainLink?: string
 }
 
-export function LogoCluster({ showIcons = true, sphereLinks, mainLink }: LogoClusterProps) {
+export function LogoCluster({
+  showIcons = true,
+  showMain = true,
+  compact = false,
+  sphereLinks,
+  mainLink
+}: LogoClusterProps) {
   const renderCard = (
     href: string | undefined,
     className: string,
@@ -51,25 +59,25 @@ export function LogoCluster({ showIcons = true, sphereLinks, mainLink }: LogoClu
   }
 
   return (
-    <div className="logo-cluster">
-      {renderCard(mainLink, 'logo-card logo-main', logoDruzhina, 'Сайт проекта', 'Дружина навигаторов')}
+    <div className={`logo-cluster${compact ? ' compact' : ''}`}>
+      {showMain ? renderCard(mainLink, 'logo-card logo-main', logoDruzhina, 'Сайт проекта') : null}
       {showIcons
         ? developmentIcons.map((icon) => {
-            const href = sphereLinks?.[icon.key]
-            return href ? (
-              <a
-                key={icon.key}
-                className="logo-card logo-icon logo-link"
-                href={href}
-                target="_blank"
-                rel="noreferrer"
-                title={icon.label}
-              >
+          const href = sphereLinks?.[icon.key]
+          return href ? (
+            <a
+              key={icon.key}
+              className={`logo-card logo-icon${compact ? ' compact' : ''} logo-link`}
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              title={icon.label}
+            >
                 <img src={icon.src} alt={icon.label} />
                 <span>{icon.label}</span>
               </a>
             ) : (
-              <div key={icon.key} className="logo-card logo-icon" title={icon.label}>
+              <div key={icon.key} className={`logo-card logo-icon${compact ? ' compact' : ''}`} title={icon.label}>
                 <img src={icon.src} alt={icon.label} />
                 <span>{icon.label}</span>
               </div>
