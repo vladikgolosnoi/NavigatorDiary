@@ -1,17 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BadgeRow } from '../components/BadgeRow'
 import { apiFetch, ApiError } from '../api/client'
 import { useAuth } from '../state/auth'
 
 const weekMs = 7 * 24 * 60 * 60 * 1000
-const finalProgressStep = 4
-
-type GoalActivity = {
-  id: string
-  title: string
-  url: string
-}
+const finalProgressStep = 5
+const progressPercentages = [0, 15, 30, 50, 75, 100]
 
 type UserGoal = {
   id: string
@@ -23,7 +17,6 @@ type UserGoal = {
   goal: {
     id: string
     name: string
-    activities: GoalActivity[]
   }
 }
 
@@ -42,8 +35,6 @@ const statusMap: Record<string, string> = {
   PENDING_CONFIRMATION: 'Ожидает подтверждения',
   ACHIEVED: 'Достигнута'
 }
-
-const progressLabels = ['Старт', 'Лучше', 'Ещё лучше', 'Почти достигнута', 'Достигнута']
 
 export function MyGoalsPage() {
   const { auth } = useAuth()
@@ -99,7 +90,7 @@ export function MyGoalsPage() {
         acc[goal.id] = null
       } else {
         const next = new Date(new Date(goal.lastProgressAt).getTime() + weekMs)
-        acc[goal.id] = next.toLocaleDateString()
+        acc[goal.id] = next.toLocaleDateString('ru-RU')
       }
       return acc
     }, {})
@@ -221,7 +212,6 @@ export function MyGoalsPage() {
         <div>
           <h1>Мои цели</h1>
           <p>Выбранные цели появляются здесь. Следующий шаг по каждой цели доступен раз в неделю.</p>
-          <BadgeRow items={['Список', 'Прогресс', 'Комментарии']} />
         </div>
         <div className="screen-actions">
           <button className="btn primary" onClick={() => navigate('/goals/catalog')}>
@@ -236,18 +226,12 @@ export function MyGoalsPage() {
       <div className="state-grid">
         <article className="card highlight" id="goals-progress">
           <h3>Как работает прогресс</h3>
-          <p>Нажимайте следующий шаг на шкале. Новый шаг открывается через 1 неделю.</p>
-          <div className="card-footer">
-            <span className="pill">1 раз в неделю</span>
-            <span className="pill accent">Кликабельная шкала</span>
-          </div>
+          <p>Прогресс отмечается по шкале: 0% → 15% → 30% → 50% → 75% → 100%.</p>
+          <p className="hint">Новый шаг открывается через 1 неделю после предыдущей отметки.</p>
         </article>
         <article className="card" id="goals-comments">
           <h3>Комментарии</h3>
           <p>Для каждой цели можно сохранить собственную заметку или план действий.</p>
-          <div className="card-footer">
-            <span className="pill">Заметки</span>
-          </div>
         </article>
       </div>
 
@@ -300,49 +284,36 @@ export function MyGoalsPage() {
               <article key={goal.id} className="card">
                 <h3>{goal.goal.name}</h3>
                 <p>Статус: {statusMap[goal.status] ?? goal.status}</p>
-                <p>Текущий уровень: {progressLabels[currentStep]}</p>
+                <p>Текущий прогресс: {progressPercentages[currentStep]}%</p>
                 <p>
                   Последняя отметка:{' '}
-                  {goal.lastProgressAt ? new Date(goal.lastProgressAt).toLocaleDateString() : 'нет данных'}
+                  {goal.lastProgressAt ? new Date(goal.lastProgressAt).toLocaleDateString('ru-RU') : 'нет данных'}
                 </p>
                 {!canMark[goal.id] && nextMarkDate[goal.id] ? (
                   <p>Следующий шаг станет доступен: {nextMarkDate[goal.id]}</p>
                 ) : null}
 
                 <div className="goal-progress-scale" aria-label={`Шкала прогресса для цели ${goal.goal.name}`}>
-                  {progressLabels.map((label, index) => {
+                  {progressPercentages.map((percent, index) => {
                     const isCurrent = index === currentStep
                     const isCompleted = index < currentStep
                     const isClickable = index === nextStep && canAdvance
                     return (
                       <button
-                        key={label}
+                        key={percent}
                         type="button"
                         className={`goal-progress-step${isCompleted ? ' completed' : ''}${isCurrent ? ' current' : ''}${isClickable ? ' clickable' : ''}`}
                         onClick={() => markProgress(goal)}
                         disabled={!isClickable}
+                        aria-label={`Отметить прогресс ${percent}%`}
                       >
-                        <strong>{index + 1}</strong>
-                        <span>{label}</span>
+                        <strong>{percent}%</strong>
                       </button>
                     )
                   })}
                 </div>
 
-                <div className="card-footer">
-                  <span className="pill">Активности</span>
-                  <span className="pill accent">1 раз в неделю</span>
-                </div>
-                <p className="hint">
-                  Здесь ты можешь найти идеи для активностей, которые помогут достигнуть цели.
-                </p>
-                <div className="link-list">
-                  {goal.goal.activities.map((activity) => (
-                    <a key={activity.id} href={activity.url} target="_blank" rel="noreferrer">
-                      {activity.title}
-                    </a>
-                  ))}
-                </div>
+                <p className="hint">Активности для этой цели будут добавлены позже.</p>
 
                 <div className="comment-box">
                   <label>Комментарий к цели</label>

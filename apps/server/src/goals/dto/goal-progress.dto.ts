@@ -8,6 +8,6 @@ export class GoalProgressDto {
   @IsOptional()
   @IsInt()
   @Min(1)
-  @Max(4)
+  @Max(5)
   step?: number
 }

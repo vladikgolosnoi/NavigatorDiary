@@ -9,7 +9,7 @@ import { ChatService } from '../chat/chat.service'
 import { AuditService } from '../audit/audit.service'
 import { UpdateGoalCommentDto } from './dto/update-goal-comment.dto'
 
-const MAX_PROGRESS_STEP = 4
+const MAX_PROGRESS_STEP = 5
 
 @Injectable()
 export class GoalsService {

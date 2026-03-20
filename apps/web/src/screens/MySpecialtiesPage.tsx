@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BadgeRow } from '../components/BadgeRow'
 import { apiFetch, ApiError } from '../api/client'
 import { useAuth } from '../state/auth'
-import checklistSteps from '../assets/illustrations/checklist-steps.png'
 
 const levelMap: Record<string, string> = {
   BRONZE: 'Бронза',
@@ -126,12 +124,6 @@ export function MySpecialtiesPage() {
   )
 
   const readyForConfirmation = specialtiesWithMeta.filter((item) => item.allChecked)
-  const allMaterials = specialtiesWithMeta.flatMap((item) =>
-    item.materials.map((material) => ({
-      ...material,
-      specialtyName: item.specialty.name
-    }))
-  )
   const progressLabels = useMemo(
     () =>
       specialtiesWithMeta.map((item) => ({
@@ -148,7 +140,6 @@ export function MySpecialtiesPage() {
           <div>
             <h1>Мои специальности</h1>
             <p>Сейчас нет активной специальности. Выберите одну и ведите её до подтверждения.</p>
-            <BadgeRow items={['Чек-лист', 'Материалы', 'Статусы']} />
           </div>
           <div className="screen-actions">
             <button className="btn primary" onClick={() => navigate('/specialties/catalog')}>
@@ -180,7 +171,6 @@ export function MySpecialtiesPage() {
         <div>
           <h1>Мои специальности</h1>
           <p>Ведите одну текущую специальность, отмечайте чек-лист и следите за подтверждением.</p>
-          <BadgeRow items={['Чек-лист', 'Материалы', 'Статусы']} />
         </div>
         <div className="screen-actions">
           <button className="btn primary" onClick={loadSpecialties}>
@@ -205,22 +195,12 @@ export function MySpecialtiesPage() {
         <article className="card" id="specialties-status">
           <h3>Текущая специальность</h3>
           <p>Активно: {specialtiesWithMeta.length} / 1</p>
-          <div className="tag-list">
-            {specialtiesWithMeta.map((item) => (
-              <span key={item.id} className="tag">
-                {item.specialty.name} · {levelMap[item.level.name] ?? item.level.name}
-              </span>
-            ))}
-          </div>
-          <div className="card-footer">
-            <span className="pill">Одна активная</span>
-            <span className="pill accent">Смена через отказ</span>
-          </div>
-        </article>
-        <article className="card">
-          <h3>Этапы чек-листа</h3>
-          <img className="progress-illustration" src={checklistSteps} alt="Шкала чек-листа" />
-          <p>Если передумали, снимите текущую специальность и выберите новую в каталоге.</p>
+          {specialtiesWithMeta.map((item) => (
+            <p key={item.id}>
+              {item.specialty.name} · {levelMap[item.level.name] ?? item.level.name}
+            </p>
+          ))}
+          <p className="hint">Если передумали, снимите текущую специальность и выберите новую в каталоге.</p>
         </article>
         <article className="card" id="specialties-checklist">
           <h3>Прогресс по чек-листам</h3>
@@ -232,25 +212,10 @@ export function MySpecialtiesPage() {
             ))}
           </div>
         </article>
-        <article className="card" id="specialties-materials">
-          <h3>Материалы</h3>
-          <p className="hint">Здесь собраны материалы по всем текущим специальностям.</p>
-          <div className="link-list">
-            {allMaterials.length ? (
-              allMaterials.map((material) => (
-                <a key={material.id} href={material.url} target="_blank" rel="noreferrer">
-                  {material.specialtyName} — {material.title}
-                </a>
-              ))
-            ) : (
-              <span>Материалы пока недоступны.</span>
-            )}
-          </div>
-        </article>
       </div>
 
       <div className="specialty-stack">
-        {specialtiesWithMeta.map((specialty) => (
+        {specialtiesWithMeta.map((specialty, index) => (
           <article key={specialty.id} className="card specialty-detail-card">
             <div className="specialty-detail-head">
               <div>
@@ -259,18 +224,15 @@ export function MySpecialtiesPage() {
                   Уровень: {levelMap[specialty.level.name] ?? specialty.level.name} · Статус:{' '}
                   {statusMap[specialty.status] ?? specialty.status}
                 </p>
+                <p>
+                  Выполнено пунктов чек-листа: {specialty.checkedCount} / {specialty.total}
+                </p>
               </div>
-              <div className="card-footer">
-                <span className="pill">
-                  {specialty.checkedCount} / {specialty.total}
-                </span>
-                <span className="pill accent">{specialty.allChecked ? 'Готово к подтверждению' : 'В работе'}</span>
-                {!specialty.allChecked ? (
-                  <button className="btn ghost btn-inline" type="button" onClick={() => cancelSpecialty(specialty.id)}>
-                    Снять специальность
-                  </button>
-                ) : null}
-              </div>
+              {!specialty.allChecked ? (
+                <button className="btn ghost btn-inline" type="button" onClick={() => cancelSpecialty(specialty.id)}>
+                  Снять специальность
+                </button>
+              ) : null}
             </div>
 
             {specialty.allChecked ? (
@@ -296,7 +258,7 @@ export function MySpecialtiesPage() {
                   ))}
                 </div>
               </article>
-              <article className="card specialty-inner-card">
+              <article className="card specialty-inner-card" id={index === 0 ? 'specialty-materials' : undefined}>
                 <h4>Материалы</h4>
                 <div className="link-list">
                   {specialty.materials.length ? (

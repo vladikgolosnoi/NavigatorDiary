@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BadgeRow } from '../components/BadgeRow'
 import { apiFetch, ApiError } from '../api/client'
 import { useAuth } from '../state/auth'
 
@@ -8,6 +7,12 @@ const levelMap: Record<string, string> = {
   BRONZE: 'Бронза',
   SILVER: 'Серебро',
   GOLD: 'Золото'
+}
+
+const levelDescriptions: Record<SpecialtyLevel['name'], string> = {
+  BRONZE: 'Базовый уровень',
+  SILVER: 'Средний уровень',
+  GOLD: 'Продвинутый уровень'
 }
 
 type Area = {
@@ -167,10 +172,10 @@ export function SpecialtiesCatalogPage() {
       return 'Специальность не выбрана'
     }
     const level = activeSpecialty.levels.find((item) => item.id === selectedLevelId)
-    return `${activeSpecialty.name} (${level ? levelMap[level.name] : ''})`
+    return level
+      ? `${activeSpecialty.name} (${levelMap[level.name]} — ${levelDescriptions[level.name]})`
+      : activeSpecialty.name
   }, [activeSpecialty, selectedLevelId])
-
-  const activeLabels = activeSpecialties.map((item) => `${item.specialty.name} · ${levelMap[item.level.name]}`)
 
   return (
     <section className="screen">
@@ -178,7 +183,6 @@ export function SpecialtiesCatalogPage() {
         <div>
           <h1>Каталог специальностей</h1>
           <p>Выберите область, специальность и уровень. Одновременно можно вести только одну специальность.</p>
-          <BadgeRow items={['Область', 'Видео', 'Специальность', 'Уровень']} />
         </div>
         <div className="screen-actions">
           <button className="btn primary" onClick={selectSpecialty}>
@@ -196,43 +200,30 @@ export function SpecialtiesCatalogPage() {
       <div className="card-grid">
         <article className="card" id="specialties-areas">
           <h3>Области</h3>
-          <p className="hint">Комментарий: выбери область.</p>
-          <div className="chip-grid">
-            {areas.map((area) => (
-              <button
-                key={area.id}
-                type="button"
-                className={`chip${area.id === activeAreaId ? ' active' : ''}`}
-                onClick={() => {
-                  setActiveAreaId(area.id)
-                  setActiveSpecialtyId('')
-                }}
-              >
-                {area.name}
-              </button>
-            ))}
-          </div>
-        </article>
-        <article className="card" id="specialties-video">
-          <h3>Видео о специальностях</h3>
-          <p className="hint">Комментарий: узнай больше.</p>
-          <div className="video-card">
-            {videoResources.length ? (
-              <div className="link-list">
-                {videoResources.map((video) => (
-                  <a key={video.id} href={video.url} target="_blank" rel="noreferrer">
-                    {video.title}
-                  </a>
-                ))}
-              </div>
-            ) : (
-              <p>Видео недоступно</p>
-            )}
-          </div>
+          <p className="hint">Выберите направление, в котором хотите развиваться.</p>
+          {areas.length <= 1 ? (
+            <p>{areas[0]?.name ?? 'Области пока не добавлены.'}</p>
+          ) : (
+            <div className="chip-grid">
+              {areas.map((area) => (
+                <button
+                  key={area.id}
+                  type="button"
+                  className={`chip${area.id === activeAreaId ? ' active' : ''}`}
+                  onClick={() => {
+                    setActiveAreaId(area.id)
+                    setActiveSpecialtyId('')
+                  }}
+                >
+                  {area.name}
+                </button>
+              ))}
+            </div>
+          )}
         </article>
         <article className="card" id="specialties-list">
           <h3>Специальности</h3>
-          <p className="hint">Комментарий: выбери специальность.</p>
+          <p className="hint">Сначала выберите специальность, затем укажите уровень.</p>
           <div className="chip-grid">
             {specialties.map((specialty) => (
               <button
@@ -252,7 +243,10 @@ export function SpecialtiesCatalogPage() {
         </article>
         <article className="card" id="specialties-level">
           <h3>Уровни</h3>
-          <p className="hint">Комментарий: выбери уровень.</p>
+          <p className="hint">
+            Выберите уровень. Бронза — базовый уровень. Серебро — средний уровень. Золото —
+            продвинутый уровень.
+          </p>
           <div className="chip-grid">
             {activeSpecialty?.levels.map((level) => (
               <button
@@ -266,6 +260,23 @@ export function SpecialtiesCatalogPage() {
             ))}
           </div>
         </article>
+        <article className="card" id="specialties-video">
+          <h3>Видеоподборка</h3>
+          <p className="hint">Подборка видео по выбранной специальности.</p>
+          <div className="video-card">
+            {videoResources.length ? (
+              <div className="link-list">
+                {videoResources.map((video) => (
+                  <a key={video.id} href={video.url} target="_blank" rel="noreferrer">
+                    {video.title.replace('Видео-подборка', 'Видеоподборка')}
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <p>Видеоподборка пока недоступна.</p>
+            )}
+          </div>
+        </article>
       </div>
 
       <div className="state-grid">
@@ -273,28 +284,17 @@ export function SpecialtiesCatalogPage() {
           <h3>Мой выбор</h3>
           <p>{selectedLabel}</p>
           <p>Активно специальностей: {activeSpecialties.length} / 1</p>
-          {activeLabels.length ? (
-            <div className="tag-list">
-              {activeLabels.map((label) => (
-                <span key={label} className="tag">
-                  {label}
-                </span>
-              ))}
-            </div>
+          {currentSpecialty ? (
+            <p>
+              Текущая специальность: {currentSpecialty.specialty.name} (
+              {levelMap[currentSpecialty.level.name]} — {levelDescriptions[currentSpecialty.level.name]})
+            </p>
           ) : null}
-          <div className="card-footer">
-            <span className="pill">Одна активная</span>
-            <span className="pill accent">Чек-лист</span>
-          </div>
           {currentSpecialty ? (
             <button className="btn ghost" type="button" onClick={() => cancelSpecialty(currentSpecialty.id)}>
               Снять текущую специальность
             </button>
           ) : null}
-        </article>
-        <article className="card">
-          <h3>Подсказка</h3>
-          <p>Просмотрите видео и материалы, прежде чем выбирать уровень. Если передумали, снимите текущую специальность и выберите новую.</p>
         </article>
       </div>
     </section>

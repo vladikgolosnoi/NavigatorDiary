@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BadgeRow } from '../components/BadgeRow'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { apiFetch, ApiError } from '../api/client'
 import { useAuth } from '../state/auth'
@@ -272,7 +271,6 @@ export function GoalsCatalogPage() {
         <div>
           <h1>Каталог целей</h1>
           <p>Выберите возраст, сферу, компетентность и цели. Лимит - 12 целей.</p>
-          <BadgeRow items={['Возраст', 'Сфера', 'Компетентность', 'Цели']} />
         </div>
         <div className="screen-actions">
           <button className="btn primary" onClick={submitSelection}>
@@ -290,7 +288,7 @@ export function GoalsCatalogPage() {
       <div className="card-grid">
         <article className="card" id="goals-age">
           <h3>Возрастная группа</h3>
-          <p className="hint">Комментарий: выбери возраст.</p>
+          <p className="hint">Сначала выберите возрастную группу.</p>
           <div className="chip-grid">
             {ageGroups.map((group) => (
               <button
@@ -310,7 +308,7 @@ export function GoalsCatalogPage() {
         </article>
         <article className="card" id="goals-spheres">
           <h3>Сферы развития</h3>
-          <p className="hint">Комментарий: выбери сферу развития.</p>
+          <p className="hint">Выберите сферу развития, которая вам ближе.</p>
           <div className="chip-grid">
             {spheres.map((sphere) => (
               <button
@@ -329,7 +327,7 @@ export function GoalsCatalogPage() {
         </article>
         <article className="card" id="goals-competencies">
           <h3>Компетентности</h3>
-          <p className="hint">Комментарий: выбери компетентность.</p>
+          <p className="hint">Выберите компетентность внутри выбранной сферы.</p>
           <div className="chip-grid">
             {competencies.map((competency) => (
               <button
@@ -345,7 +343,7 @@ export function GoalsCatalogPage() {
         </article>
         <article className="card" id="goals-targets">
           <h3>Цели</h3>
-          <p className="hint">Комментарий: выбери цель (до 12 за один раз).</p>
+          <p className="hint">Выберите цели. За один раз можно сохранить до 12 целей.</p>
           <div className="goal-list">
             {goals.map((goal) => {
               const selected = selection.selectedGoalIds.includes(goal.id)
@@ -372,16 +370,9 @@ export function GoalsCatalogPage() {
           <p>Выбрано целей: {selection.selectedGoalIds.length} / 12</p>
           <p>
             Следующий выбор:{' '}
-            {nextEligibleDate ? nextEligibleDate.toLocaleDateString() : 'сразу после первого выбора'}
+            {nextEligibleDate ? nextEligibleDate.toLocaleDateString('ru-RU') : 'сразу после первого выбора'}
           </p>
-          <div className="card-footer">
-            <span className="pill">Ограничение 3 месяца</span>
-            <span className="pill accent">Лимит 12</span>
-          </div>
-        </article>
-        <article className="card">
-          <h3>Подсказка</h3>
-          <p>Старайтесь выбирать цели из разных сфер, чтобы развиваться комплексно.</p>
+          <p className="hint">Повторный выбор целей открывается через 3 месяца после сохранения.</p>
         </article>
       </div>
     </section>

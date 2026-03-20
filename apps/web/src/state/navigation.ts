@@ -144,17 +144,17 @@ export const subMenus: Array<{ prefix: string; items: SubMenuItem[] }> = [
     prefix: '/specialties/catalog',
     items: [
       { label: 'Области', anchor: 'specialties-areas' },
-      { label: 'Видео', anchor: 'specialties-video' },
       { label: 'Специальности', anchor: 'specialties-list' },
-      { label: 'Уровень', anchor: 'specialties-level' }
+      { label: 'Уровень', anchor: 'specialties-level' },
+      { label: 'Видео', anchor: 'specialties-video' }
     ]
   },
   {
     prefix: '/specialties/my',
     items: [
+      { label: 'Статус', anchor: 'specialties-status' },
       { label: 'Чек-лист', anchor: 'specialties-checklist' },
-      { label: 'Материалы', anchor: 'specialties-materials' },
-      { label: 'Статусы', anchor: 'specialties-status' }
+      { label: 'Материалы', anchor: 'specialty-materials' }
     ]
   },
   {
