@@ -188,7 +188,7 @@ button {
   backdrop-filter: blur(18px);
   border-bottom: 1px solid rgba(13, 83, 125, 0.08);
   box-shadow: 0 10px 28px rgba(16, 50, 70, 0.08);
-  width: min(100%, 1080px);
+  width: min(100%, 1120px);
   margin: 0 auto;
 }
 
@@ -198,6 +198,7 @@ button {
   align-items: center;
   gap: 12px;
   min-width: 0;
+  padding-right: 6px;
 }
 
 .brand-mark {
@@ -231,12 +232,14 @@ button {
   font-size: 0.8rem;
   letter-spacing: 0.03em;
   text-transform: uppercase;
+  display: block;
+  margin-top: 2px;
 }
 
 .top-nav-links {
   grid-area: nav;
   display: flex;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
   overflow-x: auto;
   padding-bottom: 4px;
@@ -296,9 +299,10 @@ button {
 .role-nav {
   grid-area: role;
   display: flex;
-  gap: 8px;
+  gap: 10px;
   justify-content: flex-end;
   min-width: 0;
+  align-items: center;
 }
 
 .mobile-bottom-nav {
@@ -306,8 +310,9 @@ button {
 }
 
 .role-link {
+  min-height: 46px;
   padding: 10px 14px;
-  border-radius: 16px;
+  border-radius: 18px;
   border: 1px solid rgba(13, 83, 125, 0.12);
   background: rgba(255, 255, 255, 0.78);
   font-size: 0.85rem;
@@ -327,17 +332,19 @@ button {
 }
 
 .role-chip {
-  padding: 9px 15px;
+  min-height: 54px;
+  padding: 8px 12px 8px 10px;
   border-radius: 18px;
   background: linear-gradient(180deg, rgba(13, 83, 125, 0.1), rgba(13, 83, 125, 0.04));
   border: 1px solid rgba(13, 83, 125, 0.1);
   display: flex;
-  flex-direction: column;
-  gap: 3px;
+  align-items: center;
+  gap: 10px;
   font-size: 0.85rem;
   font-weight: 700;
   box-shadow: var(--shadow-soft);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  max-width: min(280px, 28vw);
 }
 
 .role-chip-button {
@@ -357,6 +364,37 @@ button {
   font-size: 0.75rem;
 }
 
+.role-chip-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-deep));
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+  box-shadow: 0 12px 24px rgba(13, 83, 125, 0.18);
+}
+
+.role-chip-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
+.role-chip-name {
+  display: block;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .sub-nav {
   display: flex;
   gap: 12px;
@@ -366,7 +404,7 @@ button {
   backdrop-filter: blur(14px);
   overflow-x: auto;
   z-index: 5;
-  width: min(100%, 1080px);
+  width: min(100%, 1120px);
   margin: 0 auto;
   scroll-snap-type: x proximity;
   scrollbar-width: none;
@@ -415,7 +453,7 @@ button {
   padding: 28px 24px 56px;
   position: relative;
   z-index: 1;
-  width: min(100%, 1080px);
+  width: min(100%, 1120px);
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -423,7 +461,7 @@ button {
 }
 
 .support-footer {
-  width: min(100%, 1080px);
+  width: min(100%, 1120px);
   margin: 0 auto 96px;
   padding: 0 24px 8px;
 }
@@ -2056,11 +2094,12 @@ button {
 
 @media (max-width: 760px) {
 
-  .role-chip span {
+  .role-chip {
+    max-width: min(220px, 62vw);
+  }
+
+  .role-chip-name {
     max-width: 120px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   .role-link {
@@ -2119,22 +2158,30 @@ button {
   .role-nav {
     width: auto;
     flex-wrap: nowrap;
+    gap: 8px;
   }
 
   .role-chip {
     min-width: 0;
-    padding: 8px 10px;
+    min-height: 46px;
+    padding: 7px 10px 7px 8px;
+    gap: 8px;
+    max-width: min(180px, 58vw);
   }
 
-  .role-chip span {
-    max-width: 78px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  .role-chip-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
+    font-size: 0.66rem;
   }
 
   .role-chip small {
     font-size: 0.7rem;
+  }
+
+  .role-chip-name {
+    max-width: 86px;
   }
 
   .main-content {
@@ -2240,9 +2287,9 @@ button {
   }
 
   .mobile-nav-icon {
-    width: 34px;
-    height: 34px;
-    border-radius: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 11px;
   }
 
   .goal-progress-step {
@@ -2261,6 +2308,8 @@ button {
   }
 
   .home-meta-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
   }
 
@@ -2268,11 +2317,16 @@ button {
     min-height: 34px;
     padding: 7px 12px;
     font-size: 0.82rem;
+    justify-content: center;
   }
 
   .home-hero-side {
     padding: 16px;
     border-radius: 24px;
+  }
+
+  .home-meta-pill:last-child {
+    grid-column: 1 / -1;
   }
 
   .home-announcement-card {
@@ -2332,8 +2386,9 @@ button {
   }
 
   .role-nav {
-    width: 100%;
-    justify-content: space-between;
+    width: auto;
+    justify-content: flex-end;
+    gap: 8px;
   }
 
   .role-chip,
@@ -2342,8 +2397,10 @@ button {
   }
 
   .role-chip {
-    flex: 1 1 auto;
-    padding: 7px 10px;
+    flex: 0 1 auto;
+    padding: 6px 9px 6px 7px;
+    min-width: 0;
+    max-width: 170px;
   }
 
   .role-chip small {
@@ -2406,9 +2463,13 @@ button {
     padding: 7px 10px;
   }
 
-  .home-meta-pill {
-    width: 100%;
-    justify-content: center;
+  .home-meta-row {
+    grid-template-columns: 1fr;
+  }
+
+  .home-meta-pill,
+  .home-meta-pill:last-child {
+    grid-column: auto;
   }
 
   .home-announcement-card {
@@ -2444,10 +2505,10 @@ button {
   }
 
   .mobile-nav-icon {
-    width: 30px;
-    height: 30px;
-    border-radius: 10px;
-    font-size: 0.58rem;
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    font-size: 0.54rem;
   }
 
   .support-footer {

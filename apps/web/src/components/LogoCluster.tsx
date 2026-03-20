@@ -54,9 +54,27 @@ export function LogoCluster({ showIcons = true, sphereLinks, mainLink }: LogoClu
     <div className="logo-cluster">
       {renderCard(mainLink, 'logo-card logo-main', logoDruzhina, 'Сайт проекта', 'Дружина навигаторов')}
       {showIcons
-        ? developmentIcons.map((icon) =>
-            renderCard(sphereLinks?.[icon.key], 'logo-card logo-icon', icon.src, icon.label)
-          )
+        ? developmentIcons.map((icon) => {
+            const href = sphereLinks?.[icon.key]
+            return href ? (
+              <a
+                key={icon.key}
+                className="logo-card logo-icon logo-link"
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                title={icon.label}
+              >
+                <img src={icon.src} alt={icon.label} />
+                <span>{icon.label}</span>
+              </a>
+            ) : (
+              <div key={icon.key} className="logo-card logo-icon" title={icon.label}>
+                <img src={icon.src} alt={icon.label} />
+                <span>{icon.label}</span>
+              </div>
+            )
+          })
         : null}
     </div>
   )

@@ -18,6 +18,9 @@ export function TopNav() {
   const userLabel = auth.user
     ? `${auth.user.firstName} ${auth.user.lastName}`.trim()
     : ''
+  const initials = auth.user
+    ? `${auth.user.firstName?.[0] ?? ''}${auth.user.lastName?.[0] ?? ''}`.trim() || auth.user.firstName?.[0] || 'Н'
+    : ''
   const [compactUser, setCompactUser] = useState(false)
   const [compactNav, setCompactNav] = useState(false)
   const displayName = compactUser && auth.user ? auth.user.firstName : userLabel
@@ -71,8 +74,13 @@ export function TopNav() {
         {auth.user ? (
           <>
             <button type="button" className="role-chip role-chip-button" onClick={() => navigate('/profile')}>
-              <span>{displayName}</span>
-              <small>{roleLabels[auth.user.role] ?? auth.user.role}</small>
+              <span className="role-chip-avatar" aria-hidden="true">
+                {initials}
+              </span>
+              <span className="role-chip-copy">
+                <span className="role-chip-name">{displayName}</span>
+                <small>{roleLabels[auth.user.role] ?? auth.user.role}</small>
+              </span>
             </button>
             <button type="button" className="role-link" onClick={signOut}>
               Выйти
