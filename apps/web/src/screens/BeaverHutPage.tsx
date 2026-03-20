@@ -3,54 +3,14 @@ import { BadgeRow } from '../components/BadgeRow'
 import { MascotBadgeRow } from '../components/AchievementBadges'
 import { apiFetch, ApiError } from '../api/client'
 import { useAuth } from '../state/auth'
-
-const branchTypeLabels: Record<string, string> = {
-  PARTICIPATION: 'Участие в мероприятии',
-  ACTIVE_PARTICIPATION: 'Активное участие',
-  WIN: 'Победа'
-}
-
-const levelLabels: Record<string, string> = {
-  BRONZE: 'Бронза',
-  SILVER: 'Серебро',
-  GOLD: 'Золото'
-}
-
-const branchAmountLabels: Record<string, string> = {
-  PARTICIPATION: '10 веточек',
-  ACTIVE_PARTICIPATION: '15 веточек',
-  WIN: '20 веточек'
-}
-
-const resourceLabels: Record<'ACORN' | 'TWIG' | 'LOG', string> = {
-  ACORN: 'Жёлуди',
-  TWIG: 'Веточки',
-  LOG: 'Поленья'
-}
-
-type BeaverHutData = {
-  acorns: number
-  twigs: number
-  logs: number
-  achievedGoalsCount: number
-  completedSpecialties: { id: string; specialty: string; level: string; completedAt?: string | null }[]
-  twigAwards: {
-    id: string
-    type: string
-    amount: number
-    note?: string | null
-    createdAt: string
-    organizer?: string | null
-  }[]
-  adjustments: {
-    id: string
-    resourceType: 'ACORN' | 'TWIG' | 'LOG'
-    amount: number
-    note?: string | null
-    createdAt: string
-    organizer?: string | null
-  }[]
-}
+import {
+  BeaverHutData,
+  branchAmountLabels,
+  branchTypeLabels,
+  getBeaverSummaryCards,
+  levelLabels,
+  resourceLabels
+} from '../features/beaverHut'
 
 type TeamOption = {
   id: string
@@ -140,11 +100,11 @@ export function BeaverHutPage() {
 
   const awardBranches = async () => {
     if (!auth.token) {
-      setErrorMessage('Для начисления веточек требуется вход.')
+      setErrorMessage('Для начисления желудей требуется вход.')
       return
     }
     if (!selectedTeamId) {
-      setErrorMessage('Выберите команду для начисления веточек.')
+      setErrorMessage('Выберите команду для начисления желудей.')
       return
     }
     setErrorMessage('')
@@ -163,12 +123,12 @@ export function BeaverHutPage() {
         },
         auth.token
       )
-      setNotice(`Начислено: ${response.amount} веточек каждому участнику (${response.awarded} чел.).`)
+      setNotice(`Начислено: ${response.amount} желудей каждому участнику (${response.awarded} чел.).`)
       setAwardNote('')
       loadData()
     } catch (error) {
       const apiError = error as ApiError
-      setErrorMessage(apiError.message || 'Не удалось начислить веточки')
+      setErrorMessage(apiError.message || 'Не удалось начислить жёлуди')
     } finally {
       setAwarding(false)
     }
@@ -220,36 +180,15 @@ export function BeaverHutPage() {
     }
   }
 
-  const summaryCards = useMemo(() => {
-    return [
-      {
-        id: 'beaver-acorns',
-        title: 'Жёлуди',
-        value: data?.acorns ?? 0,
-        note: 'Собирая жёлуди, вы получаете новые статусы и идете к успеху.'
-      },
-      {
-        id: 'beaver-twigs',
-        title: 'Веточки',
-        value: data?.twigs ?? 0,
-        note: 'Собранные веточки вы можете потратить на атрибутику, сувениры и другие бонусы от организаторов проекта.'
-      },
-      {
-        id: 'beaver-logs',
-        title: 'Поленья',
-        value: data?.logs ?? 0,
-        note: 'Собранные поленья позволят вам принимать участие в мастер-классах от мастеров специальностей и мероприятиях наших партнеров.'
-      }
-    ]
-  }, [data])
+  const summaryCards = useMemo(() => getBeaverSummaryCards(data), [data])
 
   return (
     <section className="screen">
       <header className="screen-header">
         <div>
           <h1>Хатка бобра</h1>
-          <p>Сокровища вашего прогресса: жёлуди, веточки и поленья.</p>
-          <BadgeRow items={['Жёлуди', 'Веточки', 'Поленья']} />
+          <p>Сокровища вашего прогресса: веточки, жёлуди и поленья.</p>
+          <BadgeRow items={['Веточки', 'Жёлуди', 'Поленья']} />
         </div>
         <div className="screen-actions">
           <button className="btn primary" onClick={loadData}>
@@ -273,8 +212,8 @@ export function BeaverHutPage() {
           <h3>Правила начисления</h3>
           <MascotBadgeRow />
           <ul className="list">
-            <li>Жёлуди: старт 6, путь 24, тропа 48, маршрут 72, экспедиция 144, успех 216.</li>
-            <li>Веточки: участие 10, активное участие 15, победа 20.</li>
+            <li>Веточки: старт 6, путь 24, тропа 48, маршрут 72, экспедиция 144, успех 216.</li>
+            <li>Жёлуди: участие 10, активное участие 15, победа 20.</li>
             <li>Поленья: бронза 10, серебро 20, золото 30.</li>
           </ul>
         </article>
@@ -296,7 +235,7 @@ export function BeaverHutPage() {
           )}
         </article>
         <article className="card">
-          <h3>История веточек</h3>
+          <h3>История желудей</h3>
           {data?.twigAwards?.length ? (
             <div className="notification-list">
               {data.twigAwards.map((award) => (
@@ -305,13 +244,13 @@ export function BeaverHutPage() {
                     <strong>{branchTypeLabels[award.type] ?? award.type}</strong>
                     <span>{new Date(award.createdAt).toLocaleDateString()}</span>
                   </header>
-                  <p>{award.note || branchAmountLabels[award.type] || `${award.amount} веточек`}</p>
+                  <p>{award.note || branchAmountLabels[award.type] || `${award.amount} желудей`}</p>
                   {award.organizer ? <small>Начислил: {award.organizer}</small> : null}
                 </div>
               ))}
             </div>
           ) : (
-            <p>Начислений веточек пока нет.</p>
+            <p>Начислений желудей пока нет.</p>
           )}
         </article>
       </div>
@@ -340,7 +279,7 @@ export function BeaverHutPage() {
       {isOrganizer ? (
         <div className="card-grid">
           <div className="form-card">
-            <h3>Начислить веточки команде</h3>
+            <h3>Начислить жёлуди команде</h3>
             <label className="field">
               Команда
               <select
@@ -377,7 +316,7 @@ export function BeaverHutPage() {
               />
             </label>
             <button className="btn primary" onClick={awardBranches} disabled={awarding}>
-              Начислить веточки
+              Начислить жёлуди
             </button>
           </div>
 
@@ -424,8 +363,8 @@ export function BeaverHutPage() {
                   }))
                 }
               >
-                <option value="ACORN">Жёлуди</option>
-                <option value="TWIG">Веточки</option>
+                <option value="ACORN">Веточки</option>
+                <option value="TWIG">Жёлуди</option>
                 <option value="LOG">Поленья</option>
               </select>
             </label>

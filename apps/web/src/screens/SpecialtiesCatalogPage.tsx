@@ -30,6 +30,7 @@ type SpecialtyResource = {
 type SpecialtyLevel = {
   id: string
   name: 'BRONZE' | 'SILVER' | 'GOLD'
+  checklist: { id: string; title: string }[]
 }
 
 type Specialty = {
@@ -108,6 +109,7 @@ export function SpecialtiesCatalogPage() {
 
   const videoResources = activeSpecialty?.resources.filter((res) => res.type === 'VIDEO') ?? []
   const currentSpecialty = activeSpecialties[0] ?? null
+  const selectedLevel = activeSpecialty?.levels.find((item) => item.id === selectedLevelId)
 
   const selectSpecialty = async () => {
     setNotice('')
@@ -185,9 +187,6 @@ export function SpecialtiesCatalogPage() {
           <p>Выберите область, специальность и уровень. Одновременно можно вести только одну специальность.</p>
         </div>
         <div className="screen-actions">
-          <button className="btn primary" onClick={selectSpecialty}>
-            Выбрать специальность
-          </button>
           <button className="btn ghost" type="button" onClick={() => navigate('/specialties/my')}>
             Мои специальности
           </button>
@@ -260,6 +259,35 @@ export function SpecialtiesCatalogPage() {
             ))}
           </div>
         </article>
+        <article className="card" id="specialties-preview">
+          <h3>Чек-лист выбранного уровня</h3>
+          {!activeSpecialty ? (
+            <p>Сначала выберите специальность.</p>
+          ) : !selectedLevel ? (
+            <p>После выбора уровня здесь появится чек-лист, с которым можно ознакомиться до подтверждения.</p>
+          ) : (
+            <>
+              <p>
+                {activeSpecialty.name} · {levelMap[selectedLevel.name]} — {levelDescriptions[selectedLevel.name]}
+              </p>
+              <div className="checklist checklist-preview">
+                {selectedLevel.checklist.map((item) => (
+                  <div key={item.id} className="check-item static">
+                    <span>{item.title}</span>
+                  </div>
+                ))}
+              </div>
+              <button
+                className="btn primary"
+                type="button"
+                onClick={selectSpecialty}
+                disabled={Boolean(currentSpecialty)}
+              >
+                Подтвердить выбор специальности
+              </button>
+            </>
+          )}
+        </article>
         <article className="card" id="specialties-video">
           <h3>Видеоподборка</h3>
           <p className="hint">Подборка видео по выбранной специальности.</p>
@@ -281,15 +309,17 @@ export function SpecialtiesCatalogPage() {
 
       <div className="state-grid">
         <article className="card highlight">
-          <h3>Мой выбор</h3>
-          <p>{selectedLabel}</p>
+          <h3>Текущая активная специальность</h3>
           <p>Активно специальностей: {activeSpecialties.length} / 1</p>
           {currentSpecialty ? (
             <p>
               Текущая специальность: {currentSpecialty.specialty.name} (
               {levelMap[currentSpecialty.level.name]} — {levelDescriptions[currentSpecialty.level.name]})
             </p>
-          ) : null}
+          ) : (
+            <p>Сейчас активной специальности нет. Можно выбрать новую после просмотра чек-листа.</p>
+          )}
+          <p className="hint">Предварительный выбор: {selectedLabel}</p>
           {currentSpecialty ? (
             <button className="btn ghost" type="button" onClick={() => cancelSpecialty(currentSpecialty.id)}>
               Снять текущую специальность

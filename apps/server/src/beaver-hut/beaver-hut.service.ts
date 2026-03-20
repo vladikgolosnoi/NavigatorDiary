@@ -36,8 +36,8 @@ const ACORN_STAGE_AMOUNTS: Record<AchievementStage, number> = {
 }
 
 const RESOURCE_LABELS: Record<BeaverResourceType, string> = {
-  [BeaverResourceType.ACORN]: 'Жёлуди',
-  [BeaverResourceType.TWIG]: 'Веточки',
+  [BeaverResourceType.ACORN]: 'Веточки',
+  [BeaverResourceType.TWIG]: 'Жёлуди',
   [BeaverResourceType.LOG]: 'Поленья'
 }
 

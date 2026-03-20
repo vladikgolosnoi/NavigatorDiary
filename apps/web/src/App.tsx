@@ -12,7 +12,6 @@ import { SpecialtiesCatalogPage } from './screens/SpecialtiesCatalogPage'
 import { MyGoalsPage } from './screens/MyGoalsPage'
 import { MySpecialtiesPage } from './screens/MySpecialtiesPage'
 import { MyAchievementsPage } from './screens/MyAchievementsPage'
-import { BeaverHutPage } from './screens/BeaverHutPage'
 import { ChatPage } from './screens/ChatPage'
 import { ExtraPage } from './screens/ExtraPage'
 import { AuthProvider } from './state/auth'
@@ -20,6 +19,7 @@ import { RequireAuth } from './components/RequireAuth'
 import { RequireRole } from './components/RequireRole'
 import { OrganizerDashboardPage } from './screens/OrganizerDashboardPage'
 import { LeaderDashboardPage } from './screens/LeaderDashboardPage'
+import { useAuth } from './state/auth'
 
 function RootRedirect() {
   let target = '/home'
@@ -37,6 +37,12 @@ function RootRedirect() {
       target = '/home'
     }
   }
+  return <Navigate to={target} replace />
+}
+
+function BeaverHubRedirect() {
+  const { auth } = useAuth()
+  const target = auth.user?.role === 'ORGANIZER' ? '/organizer' : '/achievements'
   return <Navigate to={target} replace />
 }
 
@@ -140,7 +146,7 @@ export default function App() {
                     path={screen.path}
                     element={
                       <RequireRole roles={['NAVIGATOR', 'ORGANIZER']}>
-                        <BeaverHutPage />
+                        <BeaverHubRedirect />
                       </RequireRole>
                     }
                   />

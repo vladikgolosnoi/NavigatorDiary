@@ -42,14 +42,6 @@ export const topNavItems: TopNavItem[] = [
     roles: ['NAVIGATOR']
   },
   {
-    label: 'Хатка бобра',
-    shortLabel: 'Хатка',
-    path: '/beaver-hut',
-    match: ['/beaver-hut'],
-    requiresAuth: true,
-    roles: ['NAVIGATOR', 'ORGANIZER']
-  },
-  {
     label: 'Чат',
     path: '/chat',
     match: ['/chat'],
@@ -162,7 +154,8 @@ export const subMenus: Array<{ prefix: string; items: SubMenuItem[] }> = [
     items: [
       { label: 'Статус', anchor: 'achievements-status' },
       { label: 'Этап', anchor: 'achievements-stage' },
-      { label: 'Специальности', anchor: 'achievements-specialties' }
+      { label: 'Специальности', anchor: 'achievements-specialties' },
+      { label: 'Ресурсы', anchor: 'achievements-beaver' }
     ]
   },
   {
@@ -195,7 +188,8 @@ export const subMenus: Array<{ prefix: string; items: SubMenuItem[] }> = [
     items: [
       { label: 'Подтверждения', anchor: 'organizer-approvals' },
       { label: 'Анонсы', anchor: 'organizer-announcements' },
-      { label: 'Консультант', anchor: 'organizer-appeals' }
+      { label: 'Консультант', anchor: 'organizer-appeals' },
+      { label: 'Ресурсы', anchor: 'organizer-resources' }
     ]
   },
   {
@@ -269,14 +263,14 @@ export const screenConfigs: ScreenConfig[] = [
   {
     path: '/achievements',
     title: 'Мои достижения',
-    description: 'Статус по возрасту, этапы и уровни специальностей.',
-    badges: ['Возрастной статус', 'Этап', 'Уровни']
+    description: 'Статус по возрасту, этапы, подтверждённые специальности и ресурсы.',
+    badges: ['Возрастной статус', 'Этап', 'Ресурсы']
   },
   {
     path: '/beaver-hut',
     title: 'Хатка бобра',
-    description: 'Жёлуди, веточки и поленья за личные и командные достижения.',
-    badges: ['Жёлуди', 'Веточки', 'Поленья']
+    description: 'Скрытый маршрут-редирект к достижениям или панели организатора.',
+    badges: ['Редирект']
   },
   {
     path: '/chat',
@@ -293,8 +287,8 @@ export const screenConfigs: ScreenConfig[] = [
   {
     path: '/organizer',
     title: 'Панель организатора',
-    description: 'Управление подтверждениями, анонсами и командными начислениями.',
-    badges: ['Подтверждения', 'Анонсы', 'Начисления']
+    description: 'Управление подтверждениями, анонсами, обращениями и ресурсами участников.',
+    badges: ['Подтверждения', 'Анонсы', 'Ресурсы']
   },
   {
     path: '/leader',

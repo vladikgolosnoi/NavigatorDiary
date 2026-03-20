@@ -7,7 +7,6 @@ const mobileIcons: Record<string, string> = {
   '/goals/my': 'ЦЛ',
   '/specialties/my': 'СП',
   '/achievements': 'РО',
-  '/beaver-hut': 'Х',
   '/chat': 'Ч',
   '/profile': 'Я',
   '/leader': 'РК',

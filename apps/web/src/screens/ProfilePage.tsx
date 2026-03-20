@@ -39,7 +39,7 @@ export function ProfilePage() {
       : role === 'LEADER'
         ? { label: 'Открыть чат команды', path: '/chat' }
         : role === 'ORGANIZER'
-          ? { label: 'Открыть хатку бобра', path: '/beaver-hut' }
+          ? { label: 'Открыть главную', path: '/home' }
           : { label: 'Дополнительно', path: '/extra' }
 
   const quickLinks = [
@@ -57,14 +57,8 @@ export function ProfilePage() {
     },
     {
       title: 'Мои достижения',
-      description: 'Статус, этап и полученные уровни.',
+      description: 'Статус, этап, подтверждённые специальности и ресурсы.',
       path: '/achievements',
-      roles: ['NAVIGATOR']
-    },
-    {
-      title: 'Хатка бобра',
-      description: 'Жёлуди, веточки и поленья за достижения.',
-      path: '/beaver-hut',
       roles: ['NAVIGATOR']
     },
     {
@@ -81,7 +75,7 @@ export function ProfilePage() {
     },
     {
       title: 'Организатор',
-      description: 'Панель подтверждений и рассылок.',
+      description: 'Подтверждения, анонсы, обращения и управление ресурсами.',
       path: '/organizer',
       roles: ['ORGANIZER']
     },
