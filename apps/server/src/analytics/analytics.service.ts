@@ -73,16 +73,19 @@ function formatDate(value: Date | null | undefined) {
 export class AnalyticsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async loadAnalyticsData() {
+  private async loadAnalyticsData(teamId?: string | null) {
     const activeTeamFilter = {
       team: { status: TeamStatus.ACTIVE },
       status: UserStatus.ACTIVE,
-      teamId: { not: null as string | null }
+      teamId: teamId ?? { not: null as string | null }
     }
 
     const [teams, users, goals, specialties] = await Promise.all([
       this.prisma.team.findMany({
-        where: { status: TeamStatus.ACTIVE },
+        where: {
+          status: TeamStatus.ACTIVE,
+          ...(teamId ? { id: teamId } : {})
+        },
         orderBy: { name: 'asc' },
         select: {
           id: true,
@@ -209,8 +212,8 @@ export class AnalyticsService {
     return { teams, users, goals, specialties }
   }
 
-  async getOrganizerOverview() {
-    const { teams, users, goals, specialties } = await this.loadAnalyticsData()
+  async getOrganizerOverview(teamId?: string | null) {
+    const { teams, users, goals, specialties } = await this.loadAnalyticsData(teamId)
 
     const teamMap = new Map<string, TeamSummary>()
     teams.forEach((team) => {
@@ -385,8 +388,8 @@ export class AnalyticsService {
     }
   }
 
-  async exportTeamSummaryCsv() {
-    const overview = await this.getOrganizerOverview()
+  async exportTeamSummaryCsv(teamId?: string | null) {
+    const overview = await this.getOrganizerOverview(teamId)
     return buildCsv(
       [
         'Команда',
@@ -417,8 +420,8 @@ export class AnalyticsService {
     )
   }
 
-  async exportGoalsCsv() {
-    const { goals } = await this.loadAnalyticsData()
+  async exportGoalsCsv(teamId?: string | null) {
+    const { goals } = await this.loadAnalyticsData(teamId)
 
     return buildCsv(
       [
@@ -452,8 +455,8 @@ export class AnalyticsService {
     )
   }
 
-  async exportSpecialtiesCsv() {
-    const { specialties } = await this.loadAnalyticsData()
+  async exportSpecialtiesCsv(teamId?: string | null) {
+    const { specialties } = await this.loadAnalyticsData(teamId)
 
     return buildCsv(
       [

@@ -145,6 +145,7 @@ export function OrganizerDashboardPage() {
   const [analytics, setAnalytics] = useState<OrganizerAnalyticsOverview | null>(null)
   const [analyticsLoading, setAnalyticsLoading] = useState(false)
   const [exporting, setExporting] = useState<string | null>(null)
+  const [selectedAnalyticsTeamId, setSelectedAnalyticsTeamId] = useState('')
   const [selectedTeamId, setSelectedTeamId] = useState('')
   const [selectedUserId, setSelectedUserId] = useState('')
   const [awardType, setAwardType] = useState<'PARTICIPATION' | 'ACTIVE_PARTICIPATION' | 'WIN'>('PARTICIPATION')
@@ -212,11 +213,15 @@ export function OrganizerDashboardPage() {
       .catch((error: ApiError) => setErrorMessage(error.message || 'Не удалось загрузить команды для начислений'))
 
     setAnalyticsLoading(true)
-    apiFetch<OrganizerAnalyticsOverview>('/analytics/organizer/overview', {}, auth.token)
+    const analyticsPath = selectedAnalyticsTeamId
+      ? `/analytics/organizer/overview?teamId=${selectedAnalyticsTeamId}`
+      : '/analytics/organizer/overview'
+
+    apiFetch<OrganizerAnalyticsOverview>(analyticsPath, {}, auth.token)
       .then(setAnalytics)
       .catch((error: ApiError) => setErrorMessage(error.message || 'Не удалось загрузить аналитику'))
       .finally(() => setAnalyticsLoading(false))
-  }, [auth.token])
+  }, [auth.token, selectedAnalyticsTeamId])
 
   useEffect(() => {
     loadDashboard()
@@ -252,7 +257,8 @@ export function OrganizerDashboardPage() {
     setErrorMessage('')
     try {
       setExporting(fileName)
-      const blob = await apiDownload(path, {}, auth.token)
+      const exportPath = selectedAnalyticsTeamId ? `${path}?teamId=${selectedAnalyticsTeamId}` : path
+      const blob = await apiDownload(exportPath, {}, auth.token)
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
@@ -706,6 +712,21 @@ export function OrganizerDashboardPage() {
           <p className="hint">
             Здесь видно, кто из каких команд выбирает специальности и сколько целей находится в работе или уже достигнуто.
           </p>
+          <label className="field">
+            Команда
+            <select
+              className="input"
+              value={selectedAnalyticsTeamId}
+              onChange={(event) => setSelectedAnalyticsTeamId(event.target.value)}
+            >
+              <option value="">Все команды</option>
+              {teams.map((team) => (
+                <option key={team.id} value={team.id}>
+                  {team.name}
+                </option>
+              ))}
+            </select>
+          </label>
           {analyticsLoading ? (
             <p>Загружаю сводку...</p>
           ) : analytics ? (
@@ -808,7 +829,10 @@ export function OrganizerDashboardPage() {
 
         <div className="form-card">
           <h3>Экспорт CSV</h3>
-          <p>Можно быстро выгрузить таблицы для отчёта, сверки по командам и внешней аналитики.</p>
+          <p>
+            Можно быстро выгрузить таблицы для отчёта, сверки по командам и внешней аналитики.
+            {selectedAnalyticsTeamId ? ' Сейчас экспорт будет только по выбранной команде.' : ' Сейчас экспорт идет по всему проекту.'}
+          </p>
           <button
             className="btn primary"
             type="button"

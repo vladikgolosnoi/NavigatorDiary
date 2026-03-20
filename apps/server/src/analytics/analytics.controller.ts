@@ -1,4 +1,4 @@
-import { Controller, Get, Res } from '@nestjs/common'
+import { Controller, Get, Query, Res } from '@nestjs/common'
 import { RoleName } from '@prisma/client'
 import { Response } from 'express'
 import { Roles } from '../auth/decorators/roles.decorator'
@@ -10,14 +10,14 @@ export class AnalyticsController {
 
   @Roles(RoleName.ORGANIZER)
   @Get('organizer/overview')
-  async getOrganizerOverview() {
-    return this.analyticsService.getOrganizerOverview()
+  async getOrganizerOverview(@Query('teamId') teamId?: string) {
+    return this.analyticsService.getOrganizerOverview(teamId ?? null)
   }
 
   @Roles(RoleName.ORGANIZER)
   @Get('organizer/export/team-summary')
-  async exportTeamSummary(@Res() res: Response) {
-    const csv = await this.analyticsService.exportTeamSummaryCsv()
+  async exportTeamSummary(@Query('teamId') teamId: string | undefined, @Res() res: Response) {
+    const csv = await this.analyticsService.exportTeamSummaryCsv(teamId ?? null)
     res.setHeader('Content-Type', 'text/csv; charset=utf-8')
     res.setHeader('Content-Disposition', 'attachment; filename="navigator-team-summary.csv"')
     res.send(`\uFEFF${csv}`)
@@ -25,8 +25,8 @@ export class AnalyticsController {
 
   @Roles(RoleName.ORGANIZER)
   @Get('organizer/export/goals')
-  async exportGoals(@Res() res: Response) {
-    const csv = await this.analyticsService.exportGoalsCsv()
+  async exportGoals(@Query('teamId') teamId: string | undefined, @Res() res: Response) {
+    const csv = await this.analyticsService.exportGoalsCsv(teamId ?? null)
     res.setHeader('Content-Type', 'text/csv; charset=utf-8')
     res.setHeader('Content-Disposition', 'attachment; filename="navigator-goals.csv"')
     res.send(`\uFEFF${csv}`)
@@ -34,8 +34,8 @@ export class AnalyticsController {
 
   @Roles(RoleName.ORGANIZER)
   @Get('organizer/export/specialties')
-  async exportSpecialties(@Res() res: Response) {
-    const csv = await this.analyticsService.exportSpecialtiesCsv()
+  async exportSpecialties(@Query('teamId') teamId: string | undefined, @Res() res: Response) {
+    const csv = await this.analyticsService.exportSpecialtiesCsv(teamId ?? null)
     res.setHeader('Content-Type', 'text/csv; charset=utf-8')
     res.setHeader('Content-Disposition', 'attachment; filename="navigator-specialties.csv"')
     res.send(`\uFEFF${csv}`)
