@@ -7,6 +7,15 @@ import { NestExpressApplication } from '@nestjs/platform-express'
 import { AppModule } from './app.module'
 import { PrismaService } from './prisma/prisma.service'
 
+function resolveWebDistPath() {
+  const candidates = [
+    join(process.cwd(), 'apps/web/dist'),
+    join(__dirname, '../../../web/dist')
+  ]
+
+  return candidates.find((candidate) => existsSync(join(candidate, 'index.html')))
+}
+
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule)
   app.enableCors({
@@ -21,10 +30,10 @@ async function bootstrap() {
   )
   app.setGlobalPrefix('api')
 
-  // В production отдаем собранный фронтенд из apps/web/dist тем же сервером.
-  const webDistPath = join(process.cwd(), 'apps/web/dist')
-  const webIndexPath = join(webDistPath, 'index.html')
-  if (existsSync(webIndexPath)) {
+  // Ищем фронтенд и отдаем его независимо от рабочего каталога процесса.
+  const webDistPath = resolveWebDistPath()
+  const webIndexPath = webDistPath ? join(webDistPath, 'index.html') : null
+  if (webDistPath && webIndexPath) {
     app.useStaticAssets(webDistPath, { index: false })
     app.use((req: Request, res: Response, next: NextFunction) => {
       if (req.method !== 'GET') {
