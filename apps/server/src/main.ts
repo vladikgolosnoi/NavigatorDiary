@@ -9,6 +9,8 @@ import { PrismaService } from './prisma/prisma.service'
 
 function resolveWebDistPath() {
   const candidates = [
+    join(process.cwd(), 'dist/public'),
+    join(__dirname, '../public'),
     join(process.cwd(), 'apps/web/dist'),
     join(__dirname, '../../../web/dist')
   ]
