@@ -3,7 +3,7 @@ import { apiFetch } from '../api/client'
 import { LogoCluster } from '../components/LogoCluster'
 import { SupportFooter } from '../components/SupportFooter'
 import { useAuth } from '../state/auth'
-import partnerEducation from '../assets/partners/education-rostov-wordmark.png'
+import partnerEducation from '../assets/partners/education-rostov-mark.png'
 import partnerDtdm from '../assets/partners/dtdm-rostov.jpg'
 import partnerDgtu from '../assets/partners/dgtu-hearts.png'
 import partnerLibi from '../assets/partners/libi.png'
@@ -21,11 +21,17 @@ const sphereLinks = {
 const projectLink = 'https://rsdmo.ru/page77671096.html'
 const eventsLink = 'https://t.me/druzhinaevents2025'
 
-const partners = [
+const partners: ReadonlyArray<{
+  name: string
+  href: string
+  logo: string
+  logoClassName?: string
+}> = [
   {
     name: 'Управление образования города Ростова-на-Дону',
     href: 'https://rostov-gorod.ru/administration/structure/office/uo/',
-    logo: partnerEducation
+    logo: partnerEducation,
+    logoClassName: 'partner-logo-education'
   },
   {
     name: 'Дворец творчества детей и молодежи',
@@ -152,7 +158,7 @@ export function HomePage() {
         <div className="partners-grid">
           {partners.map((partner) => (
             <a key={partner.name} className="partner-card" href={partner.href} target="_blank" rel="noreferrer">
-              <img src={partner.logo} alt={partner.name} />
+              <img className={partner.logoClassName} src={partner.logo} alt={partner.name} />
               <span>{partner.name}</span>
             </a>
           ))}

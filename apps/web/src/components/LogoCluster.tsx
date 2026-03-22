@@ -1,10 +1,10 @@
 import logoDruzhina from '../assets/brand/logo-druzhina-clean.png'
-import iconEmotional from '../assets/icons-clean/icon-emotional.png'
-import iconIntellectual from '../assets/icons-clean/icon-intellectual.png'
-import iconPhysical from '../assets/icons-clean/icon-physical.png'
-import iconSocial from '../assets/icons-clean/icon-social.png'
-import iconSpiritual from '../assets/icons-clean/icon-spiritual.png'
-import iconCharacter from '../assets/icons-clean/icon-character.png'
+import iconEmotional from '../assets/icons-cropped/icon-emotional.png'
+import iconIntellectual from '../assets/icons-cropped/icon-intellectual.png'
+import iconPhysical from '../assets/icons-cropped/icon-physical.png'
+import iconSocial from '../assets/icons-cropped/icon-social.png'
+import iconSpiritual from '../assets/icons-cropped/icon-spiritual.png'
+import iconCharacter from '../assets/icons-cropped/icon-character.png'
 
 export const developmentIcons = [
   { key: 'emotional', src: iconEmotional, label: 'Эмоциональное развитие' },

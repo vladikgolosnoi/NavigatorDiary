@@ -330,6 +330,33 @@ async function seedSpecialties() {
   }
 }
 
+async function cleanupDynamicData() {
+  await prisma.$executeRawUnsafe(`
+    TRUNCATE TABLE
+      "NotificationReceipt",
+      "Notification",
+      "ChatReaction",
+      "ChatMessage",
+      "AppealMessage",
+      "Appeal",
+      "AnonymousNote",
+      "BranchAward",
+      "BeaverResourceAdjustment",
+      "AuditLog",
+      "Achievement",
+      "UserSpecialtyChecklist",
+      "UserSpecialty",
+      "GoalReaction",
+      "GoalProgress",
+      "UserGoal",
+      "GoalSelection",
+      "Announcement",
+      "User",
+      "Team"
+    RESTART IDENTITY CASCADE
+  `)
+}
+
 async function seedDemoAccess() {
   const organizerRole = await prisma.role.findUnique({
     where: { name: RoleName.ORGANIZER }
@@ -337,55 +364,15 @@ async function seedDemoAccess() {
   const leaderRole = await prisma.role.findUnique({
     where: { name: RoleName.LEADER }
   })
-  const navigatorRole = await prisma.role.findUnique({
-    where: { name: RoleName.NAVIGATOR }
-  })
 
-  if (!organizerRole || !leaderRole || !navigatorRole) {
+  if (!organizerRole || !leaderRole) {
     return
   }
 
-  const demoTeamName = 'Команда Демонстрация'
-  const demoTeamCity = 'Ростов-на-Дону'
-  const demoTeamInstitution = 'Навигаторский центр'
-
-  const existingTeam = await prisma.team.findFirst({
-    where: { name: demoTeamName }
-  })
-
-  const demoTeam = existingTeam
-    ? await prisma.team.update({
-        where: { id: existingTeam.id },
-        data: {
-          city: demoTeamCity,
-          institution: demoTeamInstitution,
-          status: TeamStatus.ACTIVE
-        }
-      })
-    : await prisma.team.create({
-        data: {
-          name: demoTeamName,
-          city: demoTeamCity,
-          institution: demoTeamInstitution,
-          status: TeamStatus.ACTIVE
-        }
-      })
-
   const demoPasswordHash = await bcrypt.hash('Demo123!', 10)
 
-  await prisma.user.upsert({
-    where: { email: 'organizer@demo.local' },
-    update: {
-      firstName: 'Ольга',
-      lastName: 'Организатор',
-      middleName: '',
-      birthDate: new Date('1990-01-01'),
-      passwordHash: demoPasswordHash,
-      status: UserStatus.ACTIVE,
-      roleId: organizerRole.id,
-      teamId: null
-    },
-    create: {
+  const organizer = await prisma.user.create({
+    data: {
       firstName: 'Ольга',
       lastName: 'Организатор',
       middleName: '',
@@ -397,19 +384,19 @@ async function seedDemoAccess() {
     }
   })
 
-  await prisma.user.upsert({
-    where: { email: 'leader@demo.local' },
-    update: {
-      firstName: 'Роман',
-      lastName: 'Руководитель',
-      middleName: '',
-      birthDate: new Date('1989-01-01'),
-      passwordHash: demoPasswordHash,
-      status: UserStatus.ACTIVE,
-      roleId: leaderRole.id,
-      teamId: demoTeam.id
-    },
-    create: {
+  const demoTeam = await prisma.team.create({
+    data: {
+      name: 'Тестовая команда',
+      city: 'Ростов-на-Дону',
+      institution: 'Тестовая площадка',
+      status: TeamStatus.ACTIVE,
+      approvedAt: new Date(),
+      approvedById: organizer.id
+    }
+  })
+
+  await prisma.user.create({
+    data: {
       firstName: 'Роман',
       lastName: 'Руководитель',
       middleName: '',
@@ -421,37 +408,13 @@ async function seedDemoAccess() {
       teamId: demoTeam.id
     }
   })
-
-  await prisma.user.upsert({
-    where: { email: 'navigator@demo.local' },
-    update: {
-      firstName: 'Нина',
-      lastName: 'Навигатор',
-      middleName: '',
-      birthDate: new Date('2012-01-01'),
-      passwordHash: demoPasswordHash,
-      status: UserStatus.ACTIVE,
-      roleId: navigatorRole.id,
-      teamId: demoTeam.id
-    },
-    create: {
-      firstName: 'Нина',
-      lastName: 'Навигатор',
-      middleName: '',
-      birthDate: new Date('2012-01-01'),
-      email: 'navigator@demo.local',
-      passwordHash: demoPasswordHash,
-      status: UserStatus.ACTIVE,
-      roleId: navigatorRole.id,
-      teamId: demoTeam.id
-    }
-  })
 }
 
 async function main() {
   await seedRoles()
   await seedGoals()
   await seedSpecialties()
+  await cleanupDynamicData()
   await seedDemoAccess()
 }
 
