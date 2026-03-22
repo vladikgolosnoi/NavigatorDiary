@@ -235,7 +235,7 @@ export function BeaverHutPage() {
           )}
         </article>
         <article className="card">
-          <h3>История желудей</h3>
+          <h3>История начислений</h3>
           {data?.twigAwards?.length ? (
             <div className="notification-list">
               {data.twigAwards.map((award) => (

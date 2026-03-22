@@ -170,7 +170,7 @@ export function MyAchievementsPage() {
 
       <div className="card-grid">
         <article className="card">
-          <h3>История желудей</h3>
+          <h3>История начислений</h3>
           {beaverData?.twigAwards.length ? (
             <div className="notification-list">
               {beaverData.twigAwards.map((award) => (
