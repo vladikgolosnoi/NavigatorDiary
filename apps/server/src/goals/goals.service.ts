@@ -11,6 +11,10 @@ import { UpdateGoalCommentDto } from './dto/update-goal-comment.dto'
 
 const MAX_PROGRESS_STEP = 5
 
+function isDemoEmail(email?: string | null) {
+  return Boolean(email && email.endsWith('@demo.local'))
+}
+
 @Injectable()
 export class GoalsService {
   constructor(
@@ -20,24 +24,38 @@ export class GoalsService {
   ) {}
 
   async getSelectionInfo(userId: string) {
-    const latest = await this.prisma.goalSelection.findFirst({
-      where: { userId },
-      orderBy: { selectedAt: 'desc' }
-    })
+    const [user, latest] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true }
+      }),
+      this.prisma.goalSelection.findFirst({
+        where: { userId },
+        orderBy: { selectedAt: 'desc' }
+      })
+    ])
 
     return {
       lastSelectedAt: latest?.selectedAt ?? null,
-      nextEligibleAt: latest?.nextEligibleAt ?? null
+      nextEligibleAt: isDemoEmail(user?.email) ? null : (latest?.nextEligibleAt ?? null)
     }
   }
 
   async selectGoals(userId: string, dto: SelectGoalsDto) {
-    const existingSelection = await this.prisma.goalSelection.findFirst({
-      where: { userId },
-      orderBy: { selectedAt: 'desc' }
-    })
+    const [user, existingSelection] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true }
+      }),
+      this.prisma.goalSelection.findFirst({
+        where: { userId },
+        orderBy: { selectedAt: 'desc' }
+      })
+    ])
 
-    if (existingSelection && existingSelection.nextEligibleAt > new Date()) {
+    const demoUser = isDemoEmail(user?.email)
+
+    if (!demoUser && existingSelection && existingSelection.nextEligibleAt > new Date()) {
       throw new BadRequestException(
         `Повторный выбор целей доступен после ${existingSelection.nextEligibleAt.toISOString()}`
       )
@@ -51,11 +69,37 @@ export class GoalsService {
       throw new NotFoundException('Некоторые цели не найдены')
     }
 
+    if (demoUser) {
+      await this.prisma.$transaction([
+        this.prisma.goalReaction.deleteMany({
+          where: {
+            userGoal: {
+              userId
+            }
+          }
+        }),
+        this.prisma.goalProgress.deleteMany({
+          where: {
+            userGoal: {
+              userId
+            }
+          }
+        }),
+        this.prisma.userGoal.deleteMany({
+          where: { userId }
+        }),
+        this.prisma.goalSelection.deleteMany({
+          where: { userId }
+        })
+      ])
+    }
+
+    const selectedAt = new Date()
     const selection = await this.prisma.goalSelection.create({
       data: {
         userId,
-        selectedAt: new Date(),
-        nextEligibleAt: addMonths(new Date(), 3),
+        selectedAt,
+        nextEligibleAt: demoUser ? selectedAt : addMonths(selectedAt, 3),
         goals: {
           create: dto.goalIds.map((goalId) => ({
             goalId,

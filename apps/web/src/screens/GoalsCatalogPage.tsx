@@ -28,8 +28,6 @@ type Goal = {
 
 type SelectionState = {
   selectedGoalIds: string[]
-  lastSelectedAt?: string
-  nextEligibleAt?: string
 }
 
 const initialSelection: SelectionState = {
@@ -40,6 +38,7 @@ export function GoalsCatalogPage() {
   const { auth } = useAuth()
   const navigate = useNavigate()
   const [selection, setSelection] = useLocalStorage<SelectionState>('goals.selection', initialSelection)
+  const [selectionInfo, setSelectionInfo] = useState<{ lastSelectedAt?: string; nextEligibleAt?: string }>({})
   const [ageGroups, setAgeGroups] = useState<AgeGroup[]>([])
   const [spheres, setSpheres] = useState<Sphere[]>([])
   const [competencies, setCompetencies] = useState<Competency[]>([])
@@ -50,15 +49,15 @@ export function GoalsCatalogPage() {
   const [notice, setNotice] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
 
-  const canSelect = !selection.nextEligibleAt || new Date(selection.nextEligibleAt) <= new Date()
+  const canSelect = !selectionInfo.nextEligibleAt || new Date(selectionInfo.nextEligibleAt) <= new Date()
   const selectionLimitReached = selection.selectedGoalIds.length >= 12
 
   const nextEligibleDate = useMemo(() => {
-    if (!selection.nextEligibleAt) {
+    if (!selectionInfo.nextEligibleAt) {
       return null
     }
-    return new Date(selection.nextEligibleAt)
-  }, [selection.nextEligibleAt])
+    return new Date(selectionInfo.nextEligibleAt)
+  }, [selectionInfo.nextEligibleAt])
 
   useEffect(() => {
     let active = true
@@ -191,16 +190,15 @@ export function GoalsCatalogPage() {
       auth.token
     )
       .then((data) => {
-        setSelection((prev) => ({
-          ...prev,
+        setSelectionInfo({
           lastSelectedAt: data.lastSelectedAt ?? undefined,
           nextEligibleAt: data.nextEligibleAt ?? undefined
-        }))
+        })
       })
       .catch(() => {
         // ignore, selection can be local
       })
-  }, [auth.token, setSelection])
+  }, [auth.token])
 
   const toggleGoal = (goalId: string) => {
     setNotice('')
@@ -211,7 +209,6 @@ export function GoalsCatalogPage() {
     }
     if (selection.selectedGoalIds.includes(goalId)) {
       setSelection({
-        ...selection,
         selectedGoalIds: selection.selectedGoalIds.filter((id) => id !== goalId)
       })
       return
@@ -221,7 +218,6 @@ export function GoalsCatalogPage() {
       return
     }
     setSelection({
-      ...selection,
       selectedGoalIds: [...selection.selectedGoalIds, goalId]
     })
   }
@@ -254,7 +250,9 @@ export function GoalsCatalogPage() {
         auth.token
       )
       setSelection({
-        selectedGoalIds: selection.selectedGoalIds,
+        selectedGoalIds: selection.selectedGoalIds
+      })
+      setSelectionInfo({
         lastSelectedAt: response.selectedAt,
         nextEligibleAt: response.nextEligibleAt
       })
