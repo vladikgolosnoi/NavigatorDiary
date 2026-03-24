@@ -369,45 +369,37 @@ async function seedDemoAccess() {
     return
   }
 
-  const demoPasswordHash = await bcrypt.hash('Demo123!', 10)
+  const demoPasswordHash = await bcrypt.hash('Navigator2026!', 10)
 
-  const organizer = await prisma.user.create({
-    data: {
-      firstName: 'Ольга',
-      lastName: 'Организатор',
-      middleName: '',
-      birthDate: new Date('1990-01-01'),
-      email: 'organizer@demo.local',
-      passwordHash: demoPasswordHash,
-      status: UserStatus.ACTIVE,
-      roleId: organizerRole.id
-    }
-  })
+  for (let index = 1; index <= 2; index += 1) {
+    await prisma.user.create({
+      data: {
+        firstName: 'Тестовый',
+        lastName: `Организатор ${index}`,
+        middleName: '',
+        birthDate: new Date(`199${index}-01-01`),
+        email: `organizer${index}@demo.local`,
+        passwordHash: demoPasswordHash,
+        status: UserStatus.ACTIVE,
+        roleId: organizerRole.id
+      }
+    })
+  }
 
-  const demoTeam = await prisma.team.create({
-    data: {
-      name: 'Тестовая команда',
-      city: 'Ростов-на-Дону',
-      institution: 'Тестовая площадка',
-      status: TeamStatus.ACTIVE,
-      approvedAt: new Date(),
-      approvedById: organizer.id
-    }
-  })
-
-  await prisma.user.create({
-    data: {
-      firstName: 'Роман',
-      lastName: 'Руководитель',
-      middleName: '',
-      birthDate: new Date('1989-01-01'),
-      email: 'leader@demo.local',
-      passwordHash: demoPasswordHash,
-      status: UserStatus.ACTIVE,
-      roleId: leaderRole.id,
-      teamId: demoTeam.id
-    }
-  })
+  for (let index = 1; index <= 30; index += 1) {
+    await prisma.user.create({
+      data: {
+        firstName: 'Тестовый',
+        lastName: `Руководитель ${index}`,
+        middleName: '',
+        birthDate: new Date('1989-01-01'),
+        email: `leader${String(index).padStart(2, '0')}@demo.local`,
+        passwordHash: demoPasswordHash,
+        status: UserStatus.ACTIVE,
+        roleId: leaderRole.id
+      }
+    })
+  }
 }
 
 async function main() {
