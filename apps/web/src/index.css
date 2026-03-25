@@ -2471,15 +2471,15 @@ button {
 
 @media (max-width: 460px) {
   .top-nav {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "brand"
-      "role";
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "brand role";
     padding: calc(10px + env(safe-area-inset-top)) 14px 10px;
+    gap: 8px;
   }
 
   .brand {
     gap: 8px;
+    min-width: 0;
   }
 
   .brand-mark {
@@ -2490,34 +2490,47 @@ button {
 
   .brand-text span {
     font-size: 1rem;
-    line-height: 1;
+    line-height: 1.05;
   }
 
   .role-nav {
     width: auto;
     justify-content: flex-end;
-    gap: 8px;
+    gap: 6px;
   }
 
   .role-chip,
   .role-link {
-    min-height: 40px;
+    min-height: 38px;
   }
 
   .role-chip {
     flex: 0 1 auto;
-    padding: 6px 9px 6px 7px;
+    padding: 5px 8px 5px 6px;
     min-width: 0;
-    max-width: 170px;
+    max-width: 156px;
   }
 
   .role-chip small {
     display: none;
   }
 
+  .role-chip-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    font-size: 0.72rem;
+  }
+
+  .role-chip-name {
+    max-width: 82px;
+    font-size: 0.82rem;
+  }
+
   .role-link {
-    padding: 7px 10px;
-    font-size: 0.78rem;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 0.82rem;
   }
 
   .main-content {
