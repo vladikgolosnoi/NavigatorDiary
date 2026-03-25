@@ -25,6 +25,13 @@ export function AppShell() {
     })
   }, [location.pathname, screenTitle, setLastState])
 
+  useEffect(() => {
+    const baseTitle = 'Дневник Навигатора'
+    document.title = screenTitle && screenTitle !== 'Главная'
+      ? `${screenTitle} · ${baseTitle}`
+      : baseTitle
+  }, [screenTitle])
+
   return (
     <LastStateContext.Provider value={lastState}>
       <div className="app-shell">

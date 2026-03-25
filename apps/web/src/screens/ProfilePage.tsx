@@ -14,9 +14,18 @@ const initialProfile = {
   email: ''
 }
 
+type ProfileTeam = {
+  id: string
+  name: string
+  city?: string | null
+  institution?: string | null
+  status?: string | null
+} | null
+
 export function ProfilePage() {
   const navigate = useNavigate()
   const [profile, setProfile] = useState(initialProfile)
+  const [team, setTeam] = useState<ProfileTeam>(null)
   const [passwords, setPasswords] = useState({ current: '', next: '', repeat: '' })
   const [notice, setNotice] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -115,6 +124,7 @@ export function ProfilePage() {
       middleName?: string | null
       birthDate: string
       email?: string | null
+      team?: ProfileTeam
     }>('/users/me', {}, auth.token)
       .then((data) => {
         const nextProfile = {
@@ -125,6 +135,7 @@ export function ProfilePage() {
           email: data.email ?? ''
         }
         setProfile(nextProfile)
+        setTeam(data.team ?? null)
         setAuth((prev) =>
           prev.user
             ? {
@@ -317,6 +328,25 @@ export function ProfilePage() {
             />
             <small className="field-hint">Можно вводить дату вручную, без долгой прокрутки календаря.</small>
           </FormField>
+          {role === 'NAVIGATOR' || role === 'LEADER' ? (
+            <FormField label="Моя команда">
+              <div className="inline-card profile-team-card" id="profile-team">
+                {team ? (
+                  <div className="stack-list">
+                    <div className="stack-item profile-team-summary">
+                      <div>
+                        <strong>{team.name}</strong>
+                        <p>{[team.city, team.institution].filter(Boolean).join(' · ') || 'Команда выбрана'}</p>
+                      </div>
+                      <span className="pill">{team.status === 'ACTIVE' ? 'Активна' : 'На подтверждении'}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="field-hint">Команда пока не выбрана или ещё не подтверждена.</p>
+                )}
+              </div>
+            </FormField>
+          ) : null}
           <FormField label="Email" error={errors.email}>
             <input
               className="input"

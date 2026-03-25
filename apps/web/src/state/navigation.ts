@@ -110,6 +110,7 @@ export const subMenus: Array<{ prefix: string; items: SubMenuItem[] }> = [
     prefix: '/profile',
     items: [
       { label: 'Профиль', anchor: 'profile-data' },
+      { label: 'Моя команда', anchor: 'profile-team', roles: ['NAVIGATOR', 'LEADER'] },
       { label: 'Смена пароля', anchor: 'profile-password' },
       { label: 'Переходы', anchor: 'profile-links' }
     ]
@@ -198,6 +199,7 @@ export const subMenus: Array<{ prefix: string; items: SubMenuItem[] }> = [
     items: [
       { label: 'Участники', anchor: 'leader-users' },
       { label: 'Цели', anchor: 'leader-goals' },
+      { label: 'Сводка', anchor: 'leader-analytics' },
       { label: 'Создать команду', anchor: 'leader-create-team' }
     ]
   }

@@ -1420,6 +1420,21 @@ button {
   line-height: 1.35;
 }
 
+.inline-card.profile-team-card {
+  border-radius: 18px;
+  border: 1px solid rgba(13, 83, 125, 0.1);
+  background: rgba(255, 255, 255, 0.82);
+  padding: 8px;
+}
+
+.profile-team-card .stack-list {
+  margin-top: 0;
+}
+
+.profile-team-summary {
+  padding: 12px 14px;
+}
+
 .input {
   min-height: 48px;
   border-radius: 16px;

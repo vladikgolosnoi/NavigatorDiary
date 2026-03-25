@@ -1,8 +1,17 @@
-import { Controller, Get, Query, Res } from '@nestjs/common'
+import { Controller, Get, Query, Req, Res } from '@nestjs/common'
 import { GoalStatus, RoleName, SpecialtyLevelName, SpecialtyStatus } from '@prisma/client'
+import { Request } from 'express'
 import { Response } from 'express'
 import { Roles } from '../auth/decorators/roles.decorator'
 import { AnalyticsService } from './analytics.service'
+
+interface RequestWithUser extends Request {
+  user: {
+    userId: string
+    teamId?: string | null
+    role?: RoleName
+  }
+}
 
 @Controller('analytics')
 export class AnalyticsController {
@@ -35,6 +44,26 @@ export class AnalyticsController {
   ) {
     return this.analyticsService.getOrganizerOverview(
       this.buildFilters({ teamId, role, goalStatus, specialtyStatus, specialtyLevel })
+    )
+  }
+
+  @Roles(RoleName.LEADER)
+  @Get('leader/overview')
+  async getLeaderOverview(
+    @Req() req: RequestWithUser,
+    @Query('role') role?: RoleName,
+    @Query('goalStatus') goalStatus?: GoalStatus,
+    @Query('specialtyStatus') specialtyStatus?: SpecialtyStatus,
+    @Query('specialtyLevel') specialtyLevel?: SpecialtyLevelName
+  ) {
+    return this.analyticsService.getOrganizerOverview(
+      this.buildFilters({
+        teamId: req.user.teamId ?? '__leader-team-missing__',
+        role,
+        goalStatus,
+        specialtyStatus,
+        specialtyLevel
+      })
     )
   }
 
