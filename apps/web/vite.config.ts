@@ -10,7 +10,7 @@ export default defineConfig({
       includeAssets: ['favicon-32x32.png', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
         name: 'Дневник Навигатора',
-        short_name: 'Дневник',
+        short_name: 'Дневник Навигатора',
         description: 'Мобильное приложение движения «Дружина навигаторов».',
         lang: 'ru',
         theme_color: '#0b4a6f',
