@@ -3,7 +3,6 @@ import { apiFetch } from '../api/client'
 import { LogoCluster } from '../components/LogoCluster'
 import { SupportFooter } from '../components/SupportFooter'
 import { useAuth } from '../state/auth'
-import partnerEducation from '../assets/partners/education-rostov-icon.svg'
 import partnerDtdm from '../assets/partners/dtdm-rostov.jpg'
 import partnerDgtu from '../assets/partners/dgtu-hearts.png'
 import partnerLibi from '../assets/partners/libi.png'
@@ -24,14 +23,15 @@ const eventsLink = 'https://t.me/druzhinaevents2025'
 const partners: ReadonlyArray<{
   name: string
   href: string
-  logo: string
+  logo?: string
   logoClassName?: string
+  textOnly?: boolean
 }> = [
   {
     name: 'Управление образования города Ростова-на-Дону',
     href: 'https://rostov-gorod.ru/administration/structure/office/uo/',
-    logo: partnerEducation,
-    logoClassName: 'partner-logo-education'
+    textOnly: true,
+    logoClassName: 'partner-card--text-only'
   },
   {
     name: 'Дворец творчества детей и молодежи',
@@ -157,8 +157,14 @@ export function HomePage() {
         </div>
         <div className="partners-grid">
           {partners.map((partner) => (
-            <a key={partner.name} className="partner-card" href={partner.href} target="_blank" rel="noreferrer">
-              <img className={partner.logoClassName} src={partner.logo} alt={partner.name} />
+            <a
+              key={partner.name}
+              className={`partner-card ${partner.logoClassName ?? ''}`.trim()}
+              href={partner.href}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {partner.logo ? <img className={partner.logoClassName} src={partner.logo} alt={partner.name} /> : null}
               <span>{partner.name}</span>
             </a>
           ))}
