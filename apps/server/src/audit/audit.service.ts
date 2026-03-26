@@ -3,8 +3,10 @@ import { Prisma } from '@prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
 
 export type AuditAction =
+  | 'TEAM_CREATED_BY_LEADER'
   | 'TEAM_APPROVED'
   | 'TEAM_REJECTED'
+  | 'TEAM_USER_ASSIGNED'
   | 'USER_APPROVED'
   | 'USER_REJECTED'
   | 'GOAL_PROGRESS'

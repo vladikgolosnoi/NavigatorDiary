@@ -107,12 +107,19 @@ type LeaderAnalyticsOverview = {
 }
 
 export function LeaderDashboardPage() {
-  const { auth } = useAuth()
+  const { auth, setAuth } = useAuth()
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([])
   const [pendingGoals, setPendingGoals] = useState<PendingGoal[]>([])
   const [pendingSpecialties, setPendingSpecialties] = useState<PendingSpecialty[]>([])
   const [analytics, setAnalytics] = useState<LeaderAnalyticsOverview | null>(null)
   const [analyticsLoading, setAnalyticsLoading] = useState(false)
+  const [currentTeam, setCurrentTeam] = useState<{
+    id: string
+    name: string
+    city?: string | null
+    institution?: string | null
+    status: string
+  } | null>(null)
   const [teamDraft, setTeamDraft] = useState({ name: '', institution: '' })
   const [notice, setNotice] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
@@ -134,6 +141,18 @@ export function LeaderDashboardPage() {
     apiFetch<PendingSpecialty[]>('/specialties/pending', {}, auth.token)
       .then(setPendingSpecialties)
       .catch((error: ApiError) => setErrorMessage(error.message || 'Не удалось загрузить специальности'))
+
+    apiFetch<{
+      team: {
+        id: string
+        name: string
+        city?: string | null
+        institution?: string | null
+        status: string
+      } | null
+    }>('/users/me', {}, auth.token)
+      .then((profile) => setCurrentTeam(profile.team))
+      .catch((error: ApiError) => setErrorMessage(error.message || 'Не удалось загрузить данные команды'))
 
     setAnalyticsLoading(true)
     apiFetch<LeaderAnalyticsOverview>('/analytics/leader/overview', {}, auth.token)
@@ -225,11 +244,21 @@ export function LeaderDashboardPage() {
       setErrorMessage('Укажите образовательное учреждение.')
       return
     }
+    if (currentTeam) {
+      setErrorMessage('У руководителя уже есть привязанная команда.')
+      return
+    }
 
     try {
       setSavingTeam(true)
-      await apiFetch(
-        '/auth/register-team',
+      const createdTeam = await apiFetch<{
+        id: string
+        name: string
+        city?: string | null
+        institution?: string | null
+        status: string
+      }>(
+        '/teams/leader/create',
         {
           method: 'POST',
           body: JSON.stringify({
@@ -238,6 +267,18 @@ export function LeaderDashboardPage() {
           })
         },
         auth.token
+      )
+      setCurrentTeam(createdTeam)
+      setAuth((prev) =>
+        prev.user
+          ? {
+              ...prev,
+              user: {
+                ...prev.user,
+                teamId: createdTeam.id
+              }
+            }
+          : prev
       )
       setTeamDraft({ name: '', institution: '' })
       setNotice('Заявка на новую команду отправлена организатору.')
@@ -331,7 +372,22 @@ export function LeaderDashboardPage() {
         </article>
         <article className="card" id="leader-create-team">
           <h3>Создать команду</h3>
-          <p>Новая команда уйдёт организатору на подтверждение.</p>
+          <p>Новая команда уйдёт организатору на подтверждение. У руководителя может быть только одна команда.</p>
+          {currentTeam ? (
+            <div className="inline-card profile-team-card">
+              <h4>Моя команда</h4>
+              <div className="stack-list">
+                <div className="stack-item">
+                  <div>
+                    <strong>{currentTeam.name}</strong>
+                    <p>{currentTeam.institution || 'Учреждение не указано'}</p>
+                    <p>{currentTeam.city || 'Город не указан'}</p>
+                  </div>
+                  <span className="pill">{currentTeam.status === 'ACTIVE' ? 'Активна' : 'На подтверждении'}</span>
+                </div>
+              </div>
+            </div>
+          ) : null}
           <label className="field">
             Название команды
             <input
@@ -356,9 +412,9 @@ export function LeaderDashboardPage() {
             className="btn primary"
             type="button"
             onClick={createTeam}
-            disabled={savingTeam}
+            disabled={savingTeam || Boolean(currentTeam)}
           >
-            Создать команду
+            {currentTeam ? 'Команда уже привязана' : 'Создать команду'}
           </button>
         </article>
         <article className="card">

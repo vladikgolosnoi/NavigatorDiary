@@ -218,6 +218,17 @@ export class AuthService {
         approvedById: approverId
       }
     })
+
+    await this.prisma.user.updateMany({
+      where: {
+        teamId,
+        role: { name: RoleName.LEADER }
+      },
+      data: {
+        teamId: null
+      }
+    })
+
     await this.auditService.log('TEAM_REJECTED', approverId, 'Team', teamId, { status: 'REJECTED' })
     return updated
   }
