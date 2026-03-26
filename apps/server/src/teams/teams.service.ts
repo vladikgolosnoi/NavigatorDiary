@@ -149,4 +149,41 @@ export class TeamsService {
       role: user.role.name
     }
   }
+
+  async clearUserTeam(dto: AssignTeamUserDto, organizerId: string) {
+    if (!dto.userId && !dto.email) {
+      throw new BadRequestException('Укажите userId или email')
+    }
+
+    const user = await this.prisma.user.findFirst({
+      where: dto.userId ? { id: dto.userId } : { email: dto.email?.trim().toLowerCase() },
+      include: { role: true }
+    })
+
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден')
+    }
+
+    if (user.role.name === RoleName.ORGANIZER) {
+      throw new BadRequestException('Организатора нельзя отвязать от команды')
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: user.id },
+      data: { teamId: null }
+    })
+
+    await this.auditService.log('TEAM_USER_ASSIGNED', organizerId, 'User', user.id, {
+      teamId: null,
+      role: user.role.name
+    })
+
+    return {
+      id: updatedUser.id,
+      teamId: updatedUser.teamId,
+      firstName: updatedUser.firstName,
+      lastName: updatedUser.lastName,
+      role: user.role.name
+    }
+  }
 }

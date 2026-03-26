@@ -58,4 +58,10 @@ export class TeamsController {
   ) {
     return this.teamsService.assignUserToTeam(teamId, dto, req.user.userId)
   }
+
+  @Roles(RoleName.ORGANIZER)
+  @Post('unassign-user')
+  async clearUserTeam(@Body() dto: AssignTeamUserDto, @Req() req: RequestWithUser) {
+    return this.teamsService.clearUserTeam(dto, req.user.userId)
+  }
 }
