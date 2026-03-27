@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <g stroke="#2C34B4" stroke-width="18" stroke-linecap="square" stroke-linejoin="miter">
+    <path d="M84 392V176" />
+    <path d="M132 130V356H228" />
+    <path d="M428 392V176" />
+    <path d="M380 130V356H284" />
+    <path d="M84 392H214C231 392 245 408 256 430C267 408 281 392 298 392H428" />
+    <path d="M156 132H214C232 132 244 141 256 156C268 141 280 132 298 132H356" />
+    <path d="M205 132L229 258V356" />
+    <path d="M307 132L283 258V356" />
+  </g>
+</svg>

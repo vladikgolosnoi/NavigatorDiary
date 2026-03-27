@@ -5,7 +5,7 @@ import { SupportFooter } from '../components/SupportFooter'
 import { useAuth } from '../state/auth'
 import partnerDtdm from '../assets/partners/dtdm-rostov.jpg'
 import partnerDgtu from '../assets/partners/dgtu-hearts.png'
-import partnerEducation from '../assets/partners/education-rostov-mark.png'
+import partnerEducation from '../assets/partners/education-rostov-logo.svg'
 import partnerLibi from '../assets/partners/libi.png'
 import logoDruzhina from '../assets/brand/logo-druzhina-clean.png'
 

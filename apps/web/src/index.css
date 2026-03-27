@@ -1924,9 +1924,14 @@ button {
 }
 
 .partner-card__education-logo {
-  max-height: 68px;
-  width: auto;
+  width: 84px;
+  height: 84px;
+  max-width: 84px;
+  max-height: none;
   object-fit: contain;
+  display: block;
+  flex: 0 0 auto;
+  aspect-ratio: 1 / 1;
 }
 
 .partner-card span {
@@ -2487,7 +2492,9 @@ button {
   }
 
   .partner-card__education-logo {
-    max-height: 56px;
+    width: 72px;
+    height: 72px;
+    max-width: 72px;
   }
 }
 
@@ -2620,7 +2627,9 @@ button {
   }
 
   .partner-card__education-logo {
-    max-height: 52px;
+    width: 68px;
+    height: 68px;
+    max-width: 68px;
   }
 
   .goal-item {
