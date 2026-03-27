@@ -160,7 +160,7 @@ export function HomePage() {
           {partners.map((partner) => (
             <a
               key={partner.name}
-              className={`partner-card ${partner.logoClassName ?? ''}`.trim()}
+              className="partner-card"
               href={partner.href}
               target="_blank"
               rel="noreferrer"
