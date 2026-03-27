@@ -271,9 +271,6 @@ export function GoalsCatalogPage() {
           <p>Выберите возраст, сферу, компетентность и цели. Лимит - 12 целей.</p>
         </div>
         <div className="screen-actions">
-          <button className="btn primary" onClick={submitSelection}>
-            Сохранить выбор
-          </button>
           <button className="btn ghost" type="button" onClick={() => navigate('/goals/my')}>
             Мои цели
           </button>
@@ -371,6 +368,11 @@ export function GoalsCatalogPage() {
             {nextEligibleDate ? nextEligibleDate.toLocaleDateString('ru-RU') : 'сразу после первого выбора'}
           </p>
           <p className="hint">Повторный выбор целей открывается через 3 месяца после сохранения.</p>
+          <div className="stack-actions">
+            <button className="btn primary" type="button" onClick={submitSelection}>
+              Сохранить выбор
+            </button>
+          </div>
         </article>
       </div>
     </section>
