@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { getStageBadge, StageBadgeGrid } from '../components/AchievementBadges'
+import { getStageBadge, MascotBadgeRow, StageBadgeGrid } from '../components/AchievementBadges'
 import { apiFetch, ApiError } from '../api/client'
 import { useAuth } from '../state/auth'
 import {
@@ -157,6 +157,16 @@ export function MyAchievementsPage() {
           )}
         </article>
       </div>
+
+      <article className="card achievement-mascot-card" id="achievements-hut">
+        <div className="achievement-mascot-card__head">
+          <div>
+            <h3>Хатка бобра</h3>
+            <p className="hint">Ваши накопленные веточки, жёлуди и поленья собраны здесь.</p>
+          </div>
+        </div>
+        <MascotBadgeRow />
+      </article>
 
       <div className="card-grid" id="achievements-beaver">
         {summaryCards.map((card) => (

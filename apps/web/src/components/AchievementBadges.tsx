@@ -68,7 +68,7 @@ export function MascotBadgeRow() {
   return (
     <div className="mascot-badge-row">
       {mascotBadges.map((badge) => (
-        <article key={badge.code} className="mascot-badge-card">
+        <article key={badge.code} className="mascot-badge-card mascot-badge-card--hero">
           <img src={badge.icon} alt={badge.label} />
           <span>{badge.label}</span>
         </article>

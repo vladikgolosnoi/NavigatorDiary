@@ -1329,6 +1329,25 @@ button {
   font-weight: 700;
 }
 
+.mascot-badge-card--hero {
+  max-width: 220px;
+  min-height: 0;
+  margin: 0;
+}
+
+.achievement-mascot-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.achievement-mascot-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
