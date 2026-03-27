@@ -714,6 +714,59 @@ export function OrganizerDashboardPage() {
       {notice ? <div className="info-banner">{notice}</div> : null}
       {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
 
+      <article className="card" id="organizer-announcements">
+        <h3>Анонсы</h3>
+        <div className="form-stack">
+          <input
+            className="input"
+            value={announcementForm.title}
+            onChange={(event) =>
+              setAnnouncementForm((prev) => ({ ...prev, title: event.target.value }))
+            }
+            placeholder="Заголовок анонса"
+          />
+          <textarea
+            className="note-input"
+            value={announcementForm.body}
+            onChange={(event) =>
+              setAnnouncementForm((prev) => ({ ...prev, body: event.target.value }))
+            }
+            placeholder="Текст анонса"
+          />
+          <label className="field inline">
+            <input
+              type="checkbox"
+              checked={announcementForm.isActive}
+              onChange={(event) =>
+                setAnnouncementForm((prev) => ({ ...prev, isActive: event.target.checked }))
+              }
+            />
+            Публиковать сразу
+          </label>
+          <button className="btn primary" onClick={submitAnnouncement}>
+            Создать анонс
+          </button>
+        </div>
+        <div className="stack-list">
+          {announcements.map((item) => (
+            <div key={item.id} className="stack-item">
+              <div>
+                <strong>{item.title}</strong>
+                <p>{item.body}</p>
+              </div>
+              <div className="stack-actions">
+                <button className="btn ghost" onClick={() => toggleAnnouncement(item)}>
+                  {item.isActive ? 'Скрыть' : 'Опубликовать'}
+                </button>
+                <button className="btn ghost" onClick={() => deleteAnnouncement(item.id)}>
+                  Удалить
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </article>
+
       <div className="card-grid" id="organizer-approvals">
         <article className="card">
           <h3>Команды на подтверждение</h3>
@@ -1160,58 +1213,6 @@ export function OrganizerDashboardPage() {
       </div>
 
       <div className="card-grid">
-        <article className="card" id="organizer-announcements">
-          <h3>Анонсы</h3>
-          <div className="form-stack">
-            <input
-              className="input"
-              value={announcementForm.title}
-              onChange={(event) =>
-                setAnnouncementForm((prev) => ({ ...prev, title: event.target.value }))
-              }
-              placeholder="Заголовок анонса"
-            />
-            <textarea
-              className="note-input"
-              value={announcementForm.body}
-              onChange={(event) =>
-                setAnnouncementForm((prev) => ({ ...prev, body: event.target.value }))
-              }
-              placeholder="Текст анонса"
-            />
-            <label className="field inline">
-              <input
-                type="checkbox"
-                checked={announcementForm.isActive}
-                onChange={(event) =>
-                  setAnnouncementForm((prev) => ({ ...prev, isActive: event.target.checked }))
-                }
-              />
-              Публиковать сразу
-            </label>
-            <button className="btn primary" onClick={submitAnnouncement}>
-              Создать анонс
-            </button>
-          </div>
-          <div className="stack-list">
-            {announcements.map((item) => (
-              <div key={item.id} className="stack-item">
-                <div>
-                  <strong>{item.title}</strong>
-                  <p>{item.body}</p>
-                </div>
-                <div className="stack-actions">
-                  <button className="btn ghost" onClick={() => toggleAnnouncement(item)}>
-                    {item.isActive ? 'Скрыть' : 'Опубликовать'}
-                  </button>
-                  <button className="btn ghost" onClick={() => deleteAnnouncement(item.id)}>
-                    Удалить
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </article>
         <article className="card" id="organizer-appeals">
           <h3>Обращения онлайн-консультанта</h3>
           {appeals.length ? (

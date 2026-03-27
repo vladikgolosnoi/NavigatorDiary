@@ -1,14 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
-import {
-  AchievementStage,
-  BeaverResourceType,
-  BranchAwardType,
-  GoalStatus,
-  SpecialtyLevelName,
-  SpecialtyStatus,
-  UserStatus
-} from '@prisma/client'
+import { AchievementStage, BeaverResourceType, BranchAwardType, GoalStatus, SpecialtyStatus, UserStatus } from '@prisma/client'
 import { AwardBranchesDto } from './dto/award-branches.dto'
 import { AuditService } from '../audit/audit.service'
 import { calculateAchievementStage } from '../achievements/achievements.rules'
@@ -18,12 +10,6 @@ const BRANCH_AWARD_AMOUNTS: Record<BranchAwardType, number> = {
   [BranchAwardType.PARTICIPATION]: 10,
   [BranchAwardType.ACTIVE_PARTICIPATION]: 15,
   [BranchAwardType.WIN]: 20
-}
-
-const LOG_AMOUNTS: Record<SpecialtyLevelName, number> = {
-  [SpecialtyLevelName.BRONZE]: 10,
-  [SpecialtyLevelName.SILVER]: 20,
-  [SpecialtyLevelName.GOLD]: 30
 }
 
 const ACORN_STAGE_AMOUNTS: Record<AchievementStage, number> = {
@@ -90,10 +76,6 @@ export class BeaverHutService {
     const completedSpecialties = user.specialties.filter(
       (specialty) => specialty.status === SpecialtyStatus.COMPLETED
     )
-    const logsBase = completedSpecialties.reduce((sum, specialty) => {
-      const amount = LOG_AMOUNTS[specialty.level.name] ?? 0
-      return sum + amount
-    }, 0)
     const logAdjustments = user.resourceAdjustments
       .filter((adjustment) => adjustment.resourceType === BeaverResourceType.LOG)
       .reduce((sum, adjustment) => sum + adjustment.amount, 0)
@@ -104,7 +86,7 @@ export class BeaverHutService {
       .reduce((sum, adjustment) => sum + adjustment.amount, 0)
 
     const twigs = twigsBase + twigAdjustments
-    const logs = logsBase + logAdjustments
+    const logs = logAdjustments
 
     return {
       acorns: acorns + acornAdjustments,
@@ -137,6 +119,22 @@ export class BeaverHutService {
           ? `${adjustment.organizer.lastName} ${adjustment.organizer.firstName}`
           : null
       }))
+    }
+  }
+
+  async resetLogsForAll(organizerId: string) {
+    const result = await this.prisma.beaverResourceAdjustment.deleteMany({
+      where: { resourceType: BeaverResourceType.LOG }
+    })
+
+    await this.auditService.log('BEAVER_RESOURCE_ADJUSTED', organizerId, 'BeaverResourceAdjustment', undefined, {
+      resourceType: BeaverResourceType.LOG,
+      action: 'RESET_ALL',
+      deleted: result.count
+    })
+
+    return {
+      cleared: result.count
     }
   }
 

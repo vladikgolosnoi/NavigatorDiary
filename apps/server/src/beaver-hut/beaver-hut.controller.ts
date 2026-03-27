@@ -32,4 +32,10 @@ export class BeaverHutController {
   async adjustResource(@Req() req: RequestWithUser, @Body() dto: AdjustResourceDto) {
     return this.beaverHutService.adjustResource(req.user.userId, dto)
   }
+
+  @Post('reset-logs')
+  @Roles(RoleName.ORGANIZER)
+  async resetLogs(@Req() req: RequestWithUser) {
+    return this.beaverHutService.resetLogsForAll(req.user.userId)
+  }
 }
