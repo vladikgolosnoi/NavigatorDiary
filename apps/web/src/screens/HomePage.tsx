@@ -5,6 +5,7 @@ import { SupportFooter } from '../components/SupportFooter'
 import { useAuth } from '../state/auth'
 import partnerDtdm from '../assets/partners/dtdm-rostov.jpg'
 import partnerDgtu from '../assets/partners/dgtu-hearts.png'
+import partnerEducation from '../assets/partners/education-rostov-mark.png'
 import partnerLibi from '../assets/partners/libi.png'
 import logoDruzhina from '../assets/brand/logo-druzhina-clean.png'
 
@@ -30,8 +31,8 @@ const partners: ReadonlyArray<{
   {
     name: 'Управление образования города Ростова-на-Дону',
     href: 'https://rostov-gorod.ru/administration/structure/office/uo/',
-    textOnly: true,
-    logoClassName: 'partner-card--text-only'
+    logo: partnerEducation,
+    logoClassName: 'partner-card__education-logo'
   },
   {
     name: 'Дворец творчества детей и молодежи',

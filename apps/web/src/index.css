@@ -1917,14 +1917,16 @@ button {
     rgba(255, 255, 255, 0.94);
 }
 
-.partner-card--text-only img {
-  display: none !important;
-}
-
 .partner-card--text-only span {
   max-width: 15ch;
   font-size: 1rem;
   line-height: 1.25;
+}
+
+.partner-card__education-logo {
+  max-height: 68px;
+  width: auto;
+  object-fit: contain;
 }
 
 .partner-card span {
@@ -2483,6 +2485,10 @@ button {
   .partner-card img {
     max-height: 62px;
   }
+
+  .partner-card__education-logo {
+    max-height: 56px;
+  }
 }
 
 @media (max-width: 460px) {
@@ -2611,6 +2617,10 @@ button {
 
   .partner-card span {
     font-size: 0.78rem;
+  }
+
+  .partner-card__education-logo {
+    max-height: 52px;
   }
 
   .goal-item {
