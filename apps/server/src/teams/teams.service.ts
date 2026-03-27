@@ -186,4 +186,93 @@ export class TeamsService {
       role: user.role.name
     }
   }
+
+  async deleteTeam(teamId: string, organizerId: string) {
+    const organizer = await this.prisma.user.findUnique({
+      where: { id: organizerId },
+      include: { role: true }
+    })
+
+    if (!organizer || organizer.role.name !== RoleName.ORGANIZER) {
+      throw new ForbiddenException('Удалять команду может только организатор')
+    }
+
+    const team = await this.prisma.team.findUnique({
+      where: { id: teamId },
+      include: {
+        users: {
+          select: {
+            id: true,
+            role: {
+              select: {
+                name: true
+              }
+            }
+          }
+        },
+        chatMessages: {
+          select: {
+            id: true
+          }
+        }
+      }
+    })
+
+    if (!team) {
+      throw new NotFoundException('Команда не найдена')
+    }
+
+    const messageIds = team.chatMessages.map((message) => message.id)
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.user.updateMany({
+        where: { teamId },
+        data: { teamId: null }
+      })
+
+      await tx.notification.updateMany({
+        where: { teamId },
+        data: { teamId: null }
+      })
+
+      await tx.appeal.updateMany({
+        where: { teamId },
+        data: { teamId: null }
+      })
+
+      if (messageIds.length > 0) {
+        await tx.chatReaction.deleteMany({
+          where: {
+            messageId: {
+              in: messageIds
+            }
+          }
+        })
+      }
+
+      await tx.chatMessage.deleteMany({
+        where: { teamId }
+      })
+
+      await tx.branchAward.deleteMany({
+        where: { teamId }
+      })
+
+      await tx.team.delete({
+        where: { id: teamId }
+      })
+    })
+
+    await this.auditService.log('TEAM_DELETED', organizerId, 'Team', teamId, {
+      name: team.name,
+      detachedUsers: team.users.length
+    })
+
+    return {
+      id: team.id,
+      name: team.name,
+      detachedUsers: team.users.length,
+      deleted: true
+    }
+  }
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Post, Req } from '@nestjs/common'
 import { Public } from '../auth/decorators/public.decorator'
 import { TeamsService } from './teams.service'
 import { Roles } from '../auth/decorators/roles.decorator'
@@ -63,5 +63,11 @@ export class TeamsController {
   @Post('unassign-user')
   async clearUserTeam(@Body() dto: AssignTeamUserDto, @Req() req: RequestWithUser) {
     return this.teamsService.clearUserTeam(dto, req.user.userId)
+  }
+
+  @Roles(RoleName.ORGANIZER)
+  @Delete(':teamId')
+  async deleteTeam(@Param('teamId') teamId: string, @Req() req: RequestWithUser) {
+    return this.teamsService.deleteTeam(teamId, req.user.userId)
   }
 }

@@ -6,6 +6,7 @@ export type AuditAction =
   | 'TEAM_CREATED_BY_LEADER'
   | 'TEAM_APPROVED'
   | 'TEAM_REJECTED'
+  | 'TEAM_DELETED'
   | 'TEAM_USER_ASSIGNED'
   | 'USER_APPROVED'
   | 'USER_REJECTED'
