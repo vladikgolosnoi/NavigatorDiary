@@ -136,9 +136,9 @@ export const subMenus: Array<{ prefix: string; items: SubMenuItem[] }> = [
   {
     prefix: '/specialties/catalog',
     items: [
-      { label: 'Области', anchor: 'specialties-areas' },
       { label: 'Специальности', anchor: 'specialties-list' },
       { label: 'Уровень', anchor: 'specialties-level' },
+      { label: 'Чек-лист', anchor: 'specialties-preview' },
       { label: 'Видео', anchor: 'specialties-video' }
     ]
   },
@@ -255,7 +255,7 @@ export const screenConfigs: ScreenConfig[] = [
     path: '/specialties/catalog',
     title: 'Каталог специальностей',
     description: 'Выберите одну активную специальность и её уровень.',
-    badges: ['Область', 'Видео', 'Специальность', 'Уровень']
+    badges: ['Видео', 'Специальность', 'Уровень', 'Чек-лист']
   },
   {
     path: '/specialties/my',

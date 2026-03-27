@@ -30,10 +30,18 @@
 
 html,
 body {
+  width: 100%;
   max-width: 100%;
   overflow-x: hidden;
+  overflow-x: clip;
   overscroll-behavior-x: none;
   -webkit-text-size-adjust: 100%;
+}
+
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 html {
@@ -79,6 +87,8 @@ button {
   flex-direction: column;
   position: relative;
   overflow: hidden;
+  width: 100%;
+  max-width: 100%;
   isolation: isolate;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.56)),
@@ -466,10 +476,12 @@ button {
   position: relative;
   z-index: 1;
   width: min(100%, 1120px);
+  max-width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  overflow-x: clip;
 }
 
 .support-footer {
@@ -518,6 +530,9 @@ button {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 .screen-header {
@@ -2160,10 +2175,18 @@ button {
     display: grid;
     place-items: center;
     box-shadow: var(--shadow-soft);
-    font-size: 0.64rem;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
     transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .mobile-nav-icon svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex: 0 0 auto;
   }
 
   .mobile-nav-label {
@@ -2433,6 +2456,11 @@ button {
     border-radius: 11px;
   }
 
+  .mobile-nav-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
   .goal-progress-step {
     min-width: 88px;
     flex-basis: 88px;
@@ -2679,7 +2707,11 @@ button {
     width: 30px;
     height: 30px;
     border-radius: 9px;
-    font-size: 0.54rem;
+  }
+
+  .mobile-nav-icon svg {
+    width: 15px;
+    height: 15px;
   }
 
   .support-footer {
