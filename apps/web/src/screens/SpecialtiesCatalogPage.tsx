@@ -15,11 +15,6 @@ const levelDescriptions: Record<SpecialtyLevel['name'], string> = {
   GOLD: 'Продвинутый уровень'
 }
 
-type Area = {
-  id: string
-  name: string
-}
-
 type SpecialtyResource = {
   id: string
   type: 'VIDEO' | 'MATERIAL'
@@ -50,9 +45,7 @@ type ActiveSpecialty = {
 export function SpecialtiesCatalogPage() {
   const { auth } = useAuth()
   const navigate = useNavigate()
-  const [areas, setAreas] = useState<Area[]>([])
   const [specialties, setSpecialties] = useState<Specialty[]>([])
-  const [activeAreaId, setActiveAreaId] = useState<string>('')
   const [activeSpecialtyId, setActiveSpecialtyId] = useState<string>('')
   const [selectedLevelId, setSelectedLevelId] = useState<string>('')
   const [notice, setNotice] = useState('')
@@ -60,34 +53,17 @@ export function SpecialtiesCatalogPage() {
   const [activeSpecialties, setActiveSpecialties] = useState<ActiveSpecialty[]>([])
 
   useEffect(() => {
-    apiFetch<Area[]>('/catalogs/areas', {}, auth.token)
-      .then((data) => {
-        setAreas(data)
-        if (data.length > 0) {
-          setActiveAreaId((prev) => prev || data[0].id)
-        }
-      })
-      .catch((error: ApiError) => {
-        setErrorMessage(error.message || 'Не удалось загрузить области')
-      })
-  }, [auth.token])
-
-  useEffect(() => {
-    if (!activeAreaId) {
-      return
-    }
-    apiFetch<Specialty[]>(`/catalogs/specialties?areaId=${activeAreaId}`, {}, auth.token)
+    apiFetch<Specialty[]>('/catalogs/specialties', {}, auth.token)
       .then((data) => {
         setSpecialties(data)
         if (data.length > 0) {
           setActiveSpecialtyId((prev) => prev || data[0].id)
-          setSelectedLevelId('')
         }
       })
       .catch((error: ApiError) => {
         setErrorMessage(error.message || 'Не удалось загрузить специальности')
       })
-  }, [activeAreaId, auth.token])
+  }, [auth.token])
 
   useEffect(() => {
     if (!auth.token) {
@@ -184,7 +160,7 @@ export function SpecialtiesCatalogPage() {
       <header className="screen-header">
         <div>
           <h1>Каталог специальностей</h1>
-          <p>Выберите область, специальность и уровень. Одновременно можно вести только одну специальность.</p>
+          <p>Выберите специальность и уровень. Одновременно можно вести только одну специальность.</p>
         </div>
         <div className="screen-actions">
           <button className="btn ghost" type="button" onClick={() => navigate('/specialties/my')}>
@@ -197,29 +173,6 @@ export function SpecialtiesCatalogPage() {
       {notice ? <div className="info-banner">{notice}</div> : null}
 
       <div className="card-grid">
-        <article className="card" id="specialties-areas">
-          <h3>Области</h3>
-          <p className="hint">Выберите направление, в котором хотите развиваться.</p>
-          {areas.length <= 1 ? (
-            <p>{areas[0]?.name ?? 'Области пока не добавлены.'}</p>
-          ) : (
-            <div className="chip-grid">
-              {areas.map((area) => (
-                <button
-                  key={area.id}
-                  type="button"
-                  className={`chip${area.id === activeAreaId ? ' active' : ''}`}
-                  onClick={() => {
-                    setActiveAreaId(area.id)
-                    setActiveSpecialtyId('')
-                  }}
-                >
-                  {area.name}
-                </button>
-              ))}
-            </div>
-          )}
-        </article>
         <article className="card" id="specialties-list">
           <h3>Специальности</h3>
           <p className="hint">Сначала выберите специальность, затем укажите уровень.</p>
