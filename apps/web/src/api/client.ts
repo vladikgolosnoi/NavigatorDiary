@@ -16,6 +16,10 @@ function resolveApiBase() {
 
   const { protocol, hostname, port } = window.location
 
+  if (hostname === 'navigator-diary.ru' || hostname === 'www.navigator-diary.ru') {
+    return 'https://navigator-diary-app.onrender.com/api'
+  }
+
   // Для Vite dev используем proxy на /api.
   if (port === '5173') {
     return '/api'
