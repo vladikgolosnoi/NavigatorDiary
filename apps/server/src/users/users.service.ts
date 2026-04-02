@@ -1,10 +1,11 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { UpdateProfileDto } from './dto/update-profile.dto'
 import { ChangePasswordDto } from './dto/change-password.dto'
+import { ResetPasswordDto } from './dto/reset-password.dto'
 import * as bcrypt from 'bcryptjs'
 import { AuditService } from '../audit/audit.service'
-import { UserStatus } from '@prisma/client'
+import { RoleName, UserStatus } from '@prisma/client'
 
 @Injectable()
 export class UsersService {
@@ -99,6 +100,45 @@ export class UsersService {
       data: { passwordHash: newHash }
     })
     await this.auditService.log('PASSWORD_CHANGED', userId, 'User', userId)
+
+    return { success: true }
+  }
+
+  async resetPassword(
+    actorId: string,
+    actorRole: RoleName,
+    actorTeamId: string | null,
+    targetUserId: string,
+    dto: ResetPasswordDto
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: targetUserId },
+      include: { role: true }
+    })
+
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден')
+    }
+
+    if (actorRole === RoleName.LEADER) {
+      if (!actorTeamId || user.teamId !== actorTeamId) {
+        throw new ForbiddenException('Нельзя сбросить пароль пользователю из другой команды')
+      }
+      if (user.role.name === RoleName.ORGANIZER || user.role.name === RoleName.LEADER) {
+        throw new ForbiddenException('Руководитель может сбрасывать пароль только участникам своей команды')
+      }
+    }
+
+    const newHash = await bcrypt.hash(dto.newPassword, 10)
+
+    await this.prisma.user.update({
+      where: { id: targetUserId },
+      data: { passwordHash: newHash }
+    })
+
+    await this.auditService.log('PASSWORD_RESET', actorId, 'User', targetUserId, {
+      targetRole: user.role.name
+    })
 
     return { success: true }
   }

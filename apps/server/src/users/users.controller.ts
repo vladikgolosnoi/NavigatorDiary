@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Patch, Post, Req, BadRequestException } from '@nestjs/common'
+import { Body, Controller, Get, Patch, Post, Req, BadRequestException, Param } from '@nestjs/common'
 import { UsersService } from './users.service'
 import { UpdateProfileDto } from './dto/update-profile.dto'
 import { ChangePasswordDto } from './dto/change-password.dto'
+import { ResetPasswordDto } from './dto/reset-password.dto'
 import { Request } from 'express'
 import { Roles } from '../auth/decorators/roles.decorator'
 import { RoleName } from '@prisma/client'
@@ -31,6 +32,16 @@ export class UsersController {
   @Post('me/change-password')
   async changePassword(@Req() req: RequestWithUser, @Body() dto: ChangePasswordDto) {
     return this.usersService.changePassword(req.user.userId, dto)
+  }
+
+  @Post(':userId/reset-password')
+  @Roles(RoleName.LEADER, RoleName.ORGANIZER)
+  async resetPassword(
+    @Req() req: RequestWithUser,
+    @Body() dto: ResetPasswordDto,
+    @Param('userId') userId: string
+  ) {
+    return this.usersService.resetPassword(req.user.userId, req.user.role ?? RoleName.NAVIGATOR, req.user.teamId ?? null, userId, dto)
   }
 
   @Get('pending')
