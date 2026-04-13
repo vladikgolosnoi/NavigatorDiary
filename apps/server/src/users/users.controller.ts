@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, Post, Req, BadRequestException, Param } from '@nestjs/common'
+import { Body, Controller, Get, Patch, Post, Req, BadRequestException, Param, Query } from '@nestjs/common'
 import { UsersService } from './users.service'
 import { UpdateProfileDto } from './dto/update-profile.dto'
 import { ChangePasswordDto } from './dto/change-password.dto'
@@ -32,6 +32,12 @@ export class UsersController {
   @Post('me/change-password')
   async changePassword(@Req() req: RequestWithUser, @Body() dto: ChangePasswordDto) {
     return this.usersService.changePassword(req.user.userId, dto)
+  }
+
+  @Get('search')
+  @Roles(RoleName.ORGANIZER)
+  async searchUsers(@Query('query') query: string) {
+    return this.usersService.searchUsers(query)
   }
 
   @Post(':userId/reset-password')

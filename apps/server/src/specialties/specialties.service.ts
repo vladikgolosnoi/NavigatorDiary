@@ -235,6 +235,73 @@ export class SpecialtiesService {
     return updated
   }
 
+  async rejectSpecialty(user: AuthUser, userSpecialtyId: string) {
+    const userSpecialty = await this.prisma.userSpecialty.findUnique({
+      where: { id: userSpecialtyId },
+      include: { level: true, checklist: true, user: true, specialty: true }
+    })
+
+    if (!userSpecialty) {
+      throw new NotFoundException('Специальность не найдена')
+    }
+
+    if (userSpecialty.status !== SpecialtyStatus.ACTIVE) {
+      throw new BadRequestException('Специальность не активна')
+    }
+
+    const checklistTotal = await this.prisma.specialtyChecklistItem.count({
+      where: { levelId: userSpecialty.levelId }
+    })
+
+    if (userSpecialty.checklist.length < checklistTotal) {
+      throw new BadRequestException('Не все пункты чек-листа отмечены')
+    }
+
+    const needsOrganizer =
+      userSpecialty.level.name === SpecialtyLevelName.SILVER ||
+      userSpecialty.level.name === SpecialtyLevelName.GOLD
+
+    if (needsOrganizer && user.role !== RoleName.ORGANIZER) {
+      throw new ForbiddenException('Отклонение доступно только организатору')
+    }
+
+    if (!needsOrganizer && user.role !== RoleName.LEADER) {
+      throw new ForbiddenException('Отклонение доступно только руководителю')
+    }
+
+    if (!needsOrganizer && userSpecialty.user.teamId !== user.teamId) {
+      throw new ForbiddenException('Нельзя отклонять специальности другой команды')
+    }
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      await tx.userSpecialtyChecklist.deleteMany({
+        where: { userSpecialtyId: userSpecialty.id }
+      })
+
+      return tx.userSpecialty.update({
+        where: { id: userSpecialty.id },
+        data: {
+          status: SpecialtyStatus.CANCELLED,
+          completedAt: null,
+          confirmedAt: null,
+          confirmedById: null
+        }
+      })
+    })
+
+    if (userSpecialty.user?.teamId && userSpecialty.specialty) {
+      const displayName = `${userSpecialty.user.lastName} ${userSpecialty.user.firstName}`
+      const message = `Специальность ${userSpecialty.specialty.name} возвращена на доработку для ${displayName}`
+      await this.chatService.createSystemMessage(userSpecialty.user.teamId, message)
+    }
+
+    await this.auditService.log('SPECIALTY_REJECTED', user.userId, 'UserSpecialty', userSpecialtyId, {
+      rejectedById: user.userId
+    })
+
+    return updated
+  }
+
   async cancelSpecialty(user: AuthUser, userSpecialtyId: string) {
     const userSpecialty = await this.prisma.userSpecialty.findUnique({
       where: { id: userSpecialtyId }

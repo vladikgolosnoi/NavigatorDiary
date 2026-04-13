@@ -143,6 +143,46 @@ export class UsersService {
     return { success: true }
   }
 
+  async searchUsers(query: string) {
+    const normalizedQuery = query.trim()
+
+    if (normalizedQuery.length < 2) {
+      throw new BadRequestException('Введите минимум 2 символа для поиска')
+    }
+
+    return this.prisma.user.findMany({
+      where: {
+        OR: [
+          { email: { contains: normalizedQuery, mode: 'insensitive' } },
+          { firstName: { contains: normalizedQuery, mode: 'insensitive' } },
+          { lastName: { contains: normalizedQuery, mode: 'insensitive' } },
+          { middleName: { contains: normalizedQuery, mode: 'insensitive' } }
+        ]
+      },
+      orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
+      take: 20,
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        middleName: true,
+        email: true,
+        status: true,
+        role: {
+          select: {
+            name: true
+          }
+        },
+        team: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
+    })
+  }
+
   async listPendingUsers(teamId?: string | null) {
     return this.prisma.user.findMany({
       where: {

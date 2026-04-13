@@ -451,6 +451,23 @@ export function OrganizerDashboardPage() {
     }
   }
 
+  const rejectSpecialty = async (specialtyId: string) => {
+    if (!auth.token) {
+      return
+    }
+    setNotice('')
+    setErrorMessage('')
+    try {
+      await apiFetch(`/specialties/${specialtyId}/reject`, { method: 'POST' }, auth.token)
+      setPendingSpecialties((prev) => prev.filter((spec) => spec.id !== specialtyId))
+      setNotice('Специальность отклонена и может быть подана повторно.')
+      loadDashboard()
+    } catch (error) {
+      const apiError = error as ApiError
+      setErrorMessage(apiError.message || 'Не удалось отклонить специальность')
+    }
+  }
+
   const awardBranches = async () => {
     if (!auth.token) {
       setErrorMessage('Для начисления желудей требуется вход.')
@@ -854,9 +871,14 @@ export function OrganizerDashboardPage() {
                       {spec.user.lastName} {spec.user.firstName} · {levelLabels[spec.level.name] ?? spec.level.name}
                     </p>
                   </div>
-                  <button className="btn ghost" onClick={() => confirmSpecialty(spec.id)}>
-                    Подтвердить
-                  </button>
+                  <div className="stack-actions">
+                    <button className="btn ghost" onClick={() => confirmSpecialty(spec.id)}>
+                      Подтвердить
+                    </button>
+                    <button className="btn ghost" onClick={() => rejectSpecialty(spec.id)}>
+                      Отклонить
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

@@ -49,6 +49,12 @@ export class SpecialtiesController {
     return this.specialtiesService.confirmSpecialty(req.user, userSpecialtyId)
   }
 
+  @Post(':userSpecialtyId/reject')
+  @Roles(RoleName.LEADER, RoleName.ORGANIZER)
+  async rejectSpecialty(@Req() req: RequestWithUser, @Param('userSpecialtyId') userSpecialtyId: string) {
+    return this.specialtiesService.rejectSpecialty(req.user, userSpecialtyId)
+  }
+
   @Get('pending')
   @Roles(RoleName.LEADER, RoleName.ORGANIZER)
   async listPending(@Req() req: RequestWithUser, @Query('teamId') teamId?: string) {
