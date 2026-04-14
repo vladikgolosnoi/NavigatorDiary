@@ -23,6 +23,67 @@ export class AuthService {
     private readonly auditService: AuditService
   ) {}
 
+  private normalizeName(value: string) {
+    return value.trim().replace(/\s+/g, ' ').toLowerCase()
+  }
+
+  private getBirthDateBounds(birthDate: string) {
+    const parsed = new Date(birthDate)
+
+    if (Number.isNaN(parsed.getTime())) {
+      throw new BadRequestException('Неверная дата рождения')
+    }
+
+    const start = new Date(Date.UTC(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate()))
+    const end = new Date(start)
+    end.setUTCDate(end.getUTCDate() + 1)
+
+    return { start, end }
+  }
+
+  private normalizeMiddleName(value?: string | null) {
+    const normalized = value?.trim().replace(/\s+/g, ' ')
+    return normalized ? normalized.toLowerCase() : null
+  }
+
+  private async findDuplicateNavigator(dto: RegisterUserDto) {
+    const firstName = this.normalizeName(dto.firstName)
+    const lastName = this.normalizeName(dto.lastName)
+    const middleName = this.normalizeMiddleName(dto.middleName)
+    const { start, end } = this.getBirthDateBounds(dto.birthDate)
+
+    return this.prisma.user.findFirst({
+      where: {
+        role: { name: RoleName.NAVIGATOR },
+        firstName: { equals: firstName, mode: 'insensitive' },
+        lastName: { equals: lastName, mode: 'insensitive' },
+        birthDate: { gte: start, lt: end },
+        ...(middleName
+          ? {
+              middleName: { equals: middleName, mode: 'insensitive' }
+            }
+          : {
+              middleName: null
+            })
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        middleName: true,
+        birthDate: true,
+        email: true,
+        status: true,
+        team: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
+    })
+  }
+
   async registerTeam(dto: RegisterTeamDto) {
     const team = await this.prisma.team.create({
       data: {
@@ -47,6 +108,12 @@ export class AuthService {
 
     if (team.status !== TeamStatus.ACTIVE) {
       throw new BadRequestException('Команда еще не подтверждена')
+    }
+
+    const duplicateUser = await this.findDuplicateNavigator(dto)
+
+    if (duplicateUser) {
+      throw new ConflictException('Пользователь с такими ФИО и датой рождения уже зарегистрирован. Используйте восстановление доступа.')
     }
 
     const existingUser = await this.prisma.user.findUnique({

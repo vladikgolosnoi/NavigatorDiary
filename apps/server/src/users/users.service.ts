@@ -11,6 +11,29 @@ import { RoleName, UserStatus } from '@prisma/client'
 export class UsersService {
   constructor(private readonly prisma: PrismaService, private readonly auditService: AuditService) {}
 
+  private normalizeName(value: string) {
+    return value.trim().replace(/\s+/g, ' ').toLowerCase()
+  }
+
+  private getBirthDateBounds(birthDate: string) {
+    const parsed = new Date(birthDate)
+
+    if (Number.isNaN(parsed.getTime())) {
+      throw new BadRequestException('Неверная дата рождения')
+    }
+
+    const start = new Date(Date.UTC(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate()))
+    const end = new Date(start)
+    end.setUTCDate(end.getUTCDate() + 1)
+
+    return { start, end }
+  }
+
+  private normalizeMiddleName(value?: string | null) {
+    const normalized = value?.trim().replace(/\s+/g, ' ')
+    return normalized ? normalized.toLowerCase() : null
+  }
+
   async getProfile(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -42,6 +65,15 @@ export class UsersService {
   }
 
   async updateProfile(userId: string, dto: UpdateProfileDto) {
+    const currentUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { role: true }
+    })
+
+    if (!currentUser) {
+      throw new NotFoundException('Пользователь не найден')
+    }
+
     if (dto.email) {
       const existing = await this.prisma.user.findUnique({
         where: { email: dto.email }
@@ -49,6 +81,38 @@ export class UsersService {
 
       if (existing && existing.id !== userId) {
         throw new ConflictException('Email уже используется другим пользователем')
+      }
+    }
+
+    if (currentUser.role.name === RoleName.NAVIGATOR) {
+      const nextFirstName = dto.firstName?.trim() ?? currentUser.firstName
+      const nextLastName = dto.lastName?.trim() ?? currentUser.lastName
+      const nextMiddleName = dto.middleName === undefined ? currentUser.middleName : dto.middleName?.trim() || null
+      const nextBirthDate = dto.birthDate ?? currentUser.birthDate.toISOString().slice(0, 10)
+
+      const duplicateUser = await this.prisma.user.findFirst({
+        where: {
+          id: { not: userId },
+          role: { name: RoleName.NAVIGATOR },
+          firstName: { equals: this.normalizeName(nextFirstName), mode: 'insensitive' },
+          lastName: { equals: this.normalizeName(nextLastName), mode: 'insensitive' },
+          birthDate: {
+            gte: this.getBirthDateBounds(nextBirthDate).start,
+            lt: this.getBirthDateBounds(nextBirthDate).end
+          },
+          ...(this.normalizeMiddleName(nextMiddleName)
+            ? {
+                middleName: { equals: this.normalizeMiddleName(nextMiddleName), mode: 'insensitive' }
+              }
+            : {
+                middleName: null
+              })
+        },
+        select: { id: true }
+      })
+
+      if (duplicateUser) {
+        throw new ConflictException('Пользователь с такими ФИО и датой рождения уже существует. Используйте восстановление доступа.')
       }
     }
 
