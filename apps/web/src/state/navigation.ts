@@ -92,6 +92,7 @@ export const subMenus: Array<{ prefix: string; items: SubMenuItem[] }> = [
     prefix: '/auth/user',
     items: [
       { label: 'Вход', anchor: 'auth-user-login' },
+      { label: 'Забыли пароль', anchor: 'auth-user-login' },
       { label: 'Регистрация пользователя', anchor: 'auth-user-register' },
       { label: 'Справка', anchor: 'auth-user-help' }
     ]
@@ -188,6 +189,7 @@ export const subMenus: Array<{ prefix: string; items: SubMenuItem[] }> = [
     prefix: '/organizer',
     items: [
       { label: 'Подтверждения', anchor: 'organizer-approvals' },
+      { label: 'Доступы', anchor: 'organizer-password-resets' },
       { label: 'Аналитика', anchor: 'organizer-analytics' },
       { label: 'Анонсы', anchor: 'organizer-announcements' },
       { label: 'Консультант', anchor: 'organizer-appeals' },

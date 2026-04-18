@@ -8,10 +8,12 @@ import {
 } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { PrismaService } from '../prisma/prisma.service'
-import { RoleName, TeamStatus, UserStatus } from '@prisma/client'
+import { PasswordResetRequestStatus, RoleName, TeamStatus, UserStatus } from '@prisma/client'
 import { RegisterTeamDto } from './dto/register-team.dto'
 import { RegisterUserDto } from './dto/register-user.dto'
 import { LoginDto } from './dto/login.dto'
+import { CreatePasswordResetRequestDto } from './dto/create-password-reset-request.dto'
+import { ResolvePasswordResetRequestDto } from './dto/resolve-password-reset-request.dto'
 import * as bcrypt from 'bcryptjs'
 import { AuditService } from '../audit/audit.service'
 
@@ -188,6 +190,115 @@ export class AuthService {
         teamId: user.teamId
       }
     }
+  }
+
+  async createPasswordResetRequest(dto: CreatePasswordResetRequestDto) {
+    const request = await this.prisma.passwordResetRequest.create({
+      data: {
+        loginHint: dto.loginHint?.trim() || null,
+        fullName: dto.fullName?.trim() || null,
+        teamName: dto.teamName?.trim() || null,
+        contact: dto.contact.trim(),
+        note: dto.note?.trim() || null
+      }
+    })
+
+    await this.auditService.log('PASSWORD_RESET_REQUEST_CREATED', null, 'PasswordResetRequest', request.id, {
+      loginHint: request.loginHint,
+      teamName: request.teamName
+    })
+
+    return request
+  }
+
+  async listPasswordResetRequests() {
+    return this.prisma.passwordResetRequest.findMany({
+      orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
+      include: {
+        resolvedBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true
+          }
+        }
+      }
+    })
+  }
+
+  async completePasswordResetRequest(requestId: string, organizerId: string, dto: ResolvePasswordResetRequestDto) {
+    const request = await this.prisma.passwordResetRequest.findUnique({
+      where: { id: requestId }
+    })
+
+    if (!request) {
+      throw new NotFoundException('Заявка на восстановление не найдена')
+    }
+
+    if (request.status !== PasswordResetRequestStatus.OPEN) {
+      throw new BadRequestException('Заявка уже обработана')
+    }
+
+    const normalizedLogin = dto.login.trim().toLowerCase()
+    const user = await this.prisma.user.findUnique({
+      where: { email: normalizedLogin }
+    })
+
+    if (!user) {
+      throw new NotFoundException('Пользователь с таким логином не найден')
+    }
+
+    const passwordHash = await bcrypt.hash(dto.newPassword, 10)
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: user.id },
+        data: { passwordHash }
+      }),
+      this.prisma.passwordResetRequest.update({
+        where: { id: requestId },
+        data: {
+          status: PasswordResetRequestStatus.COMPLETED,
+          resolvedAt: new Date(),
+          resolvedById: organizerId,
+          resolvedLogin: normalizedLogin
+        }
+      })
+    ])
+
+    await this.auditService.log('PASSWORD_RESET_REQUEST_COMPLETED', organizerId, 'PasswordResetRequest', requestId, {
+      resolvedLogin: normalizedLogin,
+      targetUserId: user.id
+    })
+
+    return { success: true }
+  }
+
+  async cancelPasswordResetRequest(requestId: string, organizerId: string) {
+    const request = await this.prisma.passwordResetRequest.findUnique({
+      where: { id: requestId }
+    })
+
+    if (!request) {
+      throw new NotFoundException('Заявка на восстановление не найдена')
+    }
+
+    if (request.status !== PasswordResetRequestStatus.OPEN) {
+      throw new BadRequestException('Заявка уже обработана')
+    }
+
+    const updated = await this.prisma.passwordResetRequest.update({
+      where: { id: requestId },
+      data: {
+        status: PasswordResetRequestStatus.CANCELLED,
+        resolvedAt: new Date(),
+        resolvedById: organizerId
+      }
+    })
+
+    await this.auditService.log('PASSWORD_RESET_REQUEST_CANCELLED', organizerId, 'PasswordResetRequest', requestId)
+
+    return updated
   }
 
   async approveTeam(teamId: string, approverId: string) {

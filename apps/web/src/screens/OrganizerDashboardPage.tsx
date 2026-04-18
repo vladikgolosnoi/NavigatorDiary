@@ -79,6 +79,24 @@ type OrganizerAppeal = {
   messages: AppealMessage[]
 }
 
+type PasswordResetRequest = {
+  id: string
+  loginHint?: string | null
+  fullName?: string | null
+  teamName?: string | null
+  contact: string
+  note?: string | null
+  status: 'OPEN' | 'COMPLETED' | 'CANCELLED'
+  resolvedLogin?: string | null
+  createdAt: string
+  resolvedAt?: string | null
+  resolvedBy?: {
+    id: string
+    firstName: string
+    lastName: string
+  } | null
+}
+
 type OrganizerAnalyticsSummary = {
   teamsTotal: number
   activeUsersTotal: number
@@ -190,7 +208,9 @@ export function OrganizerDashboardPage() {
   const [pendingSpecialties, setPendingSpecialties] = useState<PendingSpecialty[]>([])
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [appeals, setAppeals] = useState<OrganizerAppeal[]>([])
+  const [passwordResetRequests, setPasswordResetRequests] = useState<PasswordResetRequest[]>([])
   const [appealReplies, setAppealReplies] = useState<Record<string, string>>({})
+  const [passwordResetDrafts, setPasswordResetDrafts] = useState<Record<string, { login: string; newPassword: string }>>({})
   const [teams, setTeams] = useState<TeamOption[]>([])
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
   const [analytics, setAnalytics] = useState<OrganizerAnalyticsOverview | null>(null)
@@ -280,6 +300,24 @@ export function OrganizerDashboardPage() {
         })
       })
       .catch((error: ApiError) => setErrorMessage(error.message || 'Не удалось загрузить обращения'))
+
+    apiFetch<PasswordResetRequest[]>('/auth/password-reset-requests', {}, auth.token)
+      .then((data) => {
+        setPasswordResetRequests(data)
+        setPasswordResetDrafts((prev) => {
+          const next = { ...prev }
+          data.forEach((request) => {
+            if (!next[request.id]) {
+              next[request.id] = {
+                login: request.loginHint ?? '',
+                newPassword: ''
+              }
+            }
+          })
+          return next
+        })
+      })
+      .catch((error: ApiError) => setErrorMessage(error.message || 'Не удалось загрузить заявки на восстановление'))
 
     apiFetch<TeamOption[]>('/teams/public')
       .then((payload) => {
@@ -465,6 +503,53 @@ export function OrganizerDashboardPage() {
     } catch (error) {
       const apiError = error as ApiError
       setErrorMessage(apiError.message || 'Не удалось отклонить специальность')
+    }
+  }
+
+  const completePasswordResetRequest = async (requestId: string) => {
+    if (!auth.token) {
+      return
+    }
+    const draft = passwordResetDrafts[requestId]
+    if (!draft?.login.trim() || !draft?.newPassword.trim()) {
+      setErrorMessage('Укажите логин аккаунта и временный пароль.')
+      return
+    }
+    setNotice('')
+    setErrorMessage('')
+    try {
+      await apiFetch(
+        `/auth/password-reset-requests/${requestId}/complete`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            login: draft.login.trim(),
+            newPassword: draft.newPassword.trim()
+          })
+        },
+        auth.token
+      )
+      setNotice('Временный пароль задан. Передайте его пользователю вручную.')
+      loadDashboard()
+    } catch (error) {
+      const apiError = error as ApiError
+      setErrorMessage(apiError.message || 'Не удалось завершить восстановление доступа')
+    }
+  }
+
+  const cancelPasswordResetRequest = async (requestId: string) => {
+    if (!auth.token) {
+      return
+    }
+    setNotice('')
+    setErrorMessage('')
+    try {
+      await apiFetch(`/auth/password-reset-requests/${requestId}/cancel`, { method: 'POST' }, auth.token)
+      setNotice('Заявка на восстановление закрыта.')
+      loadDashboard()
+    } catch (error) {
+      const apiError = error as ApiError
+      setErrorMessage(apiError.message || 'Не удалось закрыть заявку на восстановление')
     }
   }
 
@@ -887,6 +972,90 @@ export function OrganizerDashboardPage() {
           )}
         </article>
       </div>
+
+      <article className="card" id="organizer-password-resets">
+        <h3>Заявки на восстановление доступа</h3>
+        <p className="hint">
+          Пользователи оставляют заявку на входе. Здесь можно задать временный пароль вручную без email-рассылки.
+        </p>
+        {passwordResetRequests.length ? (
+          <div className="stack-list">
+            {passwordResetRequests.map((request) => {
+              const draft = passwordResetDrafts[request.id] ?? { login: request.loginHint ?? '', newPassword: '' }
+              const isOpen = request.status === 'OPEN'
+              return (
+                <div key={request.id} className="stack-item">
+                  <div>
+                    <strong>{request.fullName?.trim() || request.loginHint?.trim() || 'Заявка без имени'}</strong>
+                    <p>Логин: {request.loginHint?.trim() || 'не указан'}</p>
+                    <p>Команда: {request.teamName?.trim() || 'не указана'}</p>
+                    <p>Контакт: {request.contact}</p>
+                    {request.note ? <p>Комментарий: {request.note}</p> : null}
+                    <p>
+                      Статус: {request.status === 'OPEN' ? 'Открыта' : request.status === 'COMPLETED' ? 'Обработана' : 'Закрыта'}
+                      {request.resolvedLogin ? ` · выдан доступ для ${request.resolvedLogin}` : ''}
+                    </p>
+                  </div>
+                  {isOpen ? (
+                    <div className="stack-list">
+                      <label className="field">
+                        Логин аккаунта
+                        <input
+                          className="input"
+                          value={draft.login}
+                          onChange={(event) =>
+                            setPasswordResetDrafts((prev) => ({
+                              ...prev,
+                              [request.id]: {
+                                ...draft,
+                                login: event.target.value
+                              }
+                            }))
+                          }
+                          placeholder="Точный email/логин из базы"
+                        />
+                      </label>
+                      <label className="field">
+                        Временный пароль
+                        <input
+                          className="input"
+                          value={draft.newPassword}
+                          onChange={(event) =>
+                            setPasswordResetDrafts((prev) => ({
+                              ...prev,
+                              [request.id]: {
+                                ...draft,
+                                newPassword: event.target.value
+                              }
+                            }))
+                          }
+                          placeholder="Минимум 6 символов"
+                        />
+                      </label>
+                      <div className="stack-actions">
+                        <button className="btn ghost" onClick={() => completePasswordResetRequest(request.id)}>
+                          Выдать временный пароль
+                        </button>
+                        <button className="btn ghost" onClick={() => cancelPasswordResetRequest(request.id)}>
+                          Закрыть заявку
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="hint">
+                      {request.resolvedAt
+                        ? `Обработана ${new Date(request.resolvedAt).toLocaleString('ru-RU')}`
+                        : 'Заявка закрыта'}
+                    </p>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <p>Новых заявок на восстановление нет.</p>
+        )}
+      </article>
 
       <div className="card-grid" id="organizer-analytics">
         <article className="card highlight">

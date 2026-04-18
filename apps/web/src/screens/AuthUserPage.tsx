@@ -30,6 +30,14 @@ const emptyUserLogin = {
   password: ''
 }
 
+const emptyPasswordResetRequest = {
+  loginHint: '',
+  fullName: '',
+  teamName: '',
+  contact: '',
+  note: ''
+}
+
 type UserStatus = {
   pending: boolean
   ticket?: string
@@ -63,6 +71,10 @@ export function AuthUserPage() {
   const [loginNotice, setLoginNotice] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [teamsError, setTeamsError] = useState('')
+  const [resetNotice, setResetNotice] = useState('')
+  const [resetErrors, setResetErrors] = useState<Record<string, string>>({})
+  const [showResetForm, setShowResetForm] = useState(false)
+  const [resetData, setResetData] = useState(emptyPasswordResetRequest)
   const [loading, setLoading] = useState(false)
   const { setAuth } = useAuth()
   const navigate = useNavigate()
@@ -211,6 +223,43 @@ export function AuthUserPage() {
     }
   }
 
+  const submitPasswordResetRequest = async (event: React.FormEvent) => {
+    event.preventDefault()
+    setErrorMessage('')
+    setResetNotice('')
+    const nextErrors: Record<string, string> = {}
+    if (resetData.contact.trim().length < 3) {
+      nextErrors.contact = 'Укажите, как с вами связаться'
+    }
+    setResetErrors(nextErrors)
+    if (Object.keys(nextErrors).length > 0) {
+      return
+    }
+
+    try {
+      setLoading(true)
+      await apiFetch('/auth/password-reset-request', {
+        method: 'POST',
+        body: JSON.stringify({
+          loginHint: resetData.loginHint.trim() || undefined,
+          fullName: resetData.fullName.trim() || undefined,
+          teamName: resetData.teamName.trim() || undefined,
+          contact: resetData.contact.trim(),
+          note: resetData.note.trim() || undefined
+        })
+      })
+      setResetNotice('Заявка на восстановление отправлена. Организатор задаст временный пароль вручную.')
+      setResetData(emptyPasswordResetRequest)
+      setResetErrors({})
+      setShowResetForm(false)
+    } catch (error) {
+      const apiError = error as ApiError
+      setErrorMessage(apiError.message || 'Не удалось отправить заявку на восстановление')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <section className="screen">
       <header className="screen-header">
@@ -249,6 +298,7 @@ export function AuthUserPage() {
         </div>
       ) : null}
       {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
+      {resetNotice ? <div className="info-banner">{resetNotice}</div> : null}
       {teamsError ? <div className="error-banner">{teamsError}</div> : null}
 
       <div className="toggle">
@@ -270,31 +320,94 @@ export function AuthUserPage() {
 
       <div className="form-grid">
         {mode === 'login' ? (
-          <form className="form-card" id="auth-user-login" onSubmit={submitLogin}>
-            <h3>Вход в аккаунт</h3>
-            <FormField label="Email" error={errors.email}>
-              <input
-                className="input"
-                type="email"
-                value={loginData.email}
-                onChange={(event) => setLoginData({ ...loginData, email: event.target.value })}
-                placeholder="you@example.com"
-              />
-            </FormField>
-            <FormField label="Пароль" error={errors.password}>
-              <input
-                className="input"
-                type="password"
-                value={loginData.password}
-                onChange={(event) => setLoginData({ ...loginData, password: event.target.value })}
-                placeholder="Пароль"
-              />
-            </FormField>
-            {loginNotice ? <div className="info-banner">{loginNotice}</div> : null}
-            <button className="btn primary" type="submit" disabled={loading}>
-              Войти
-            </button>
-          </form>
+          <>
+            <form className="form-card" id="auth-user-login" onSubmit={submitLogin}>
+              <h3>Вход в аккаунт</h3>
+              <FormField label="Email" error={errors.email}>
+                <input
+                  className="input"
+                  type="email"
+                  value={loginData.email}
+                  onChange={(event) => setLoginData({ ...loginData, email: event.target.value })}
+                  placeholder="you@example.com"
+                />
+              </FormField>
+              <FormField label="Пароль" error={errors.password}>
+                <input
+                  className="input"
+                  type="password"
+                  value={loginData.password}
+                  onChange={(event) => setLoginData({ ...loginData, password: event.target.value })}
+                  placeholder="Пароль"
+                />
+              </FormField>
+              {loginNotice ? <div className="info-banner">{loginNotice}</div> : null}
+              <div className="stack-actions">
+                <button className="btn primary" type="submit" disabled={loading}>
+                  Войти
+                </button>
+                <button
+                  className="btn ghost"
+                  type="button"
+                  onClick={() => setShowResetForm((prev) => !prev)}
+                >
+                  {showResetForm ? 'Скрыть восстановление' : 'Забыли пароль?'}
+                </button>
+              </div>
+            </form>
+            {showResetForm ? (
+              <form className="form-card" onSubmit={submitPasswordResetRequest}>
+                <h3>Восстановление доступа</h3>
+                <p className="hint">
+                  Если почта не ваша или пароль забыли, оставьте заявку. Организатор задаст временный
+                  пароль вручную и свяжется с вами.
+                </p>
+                <FormField label="Логин или email, если помните">
+                  <input
+                    className="input"
+                    value={resetData.loginHint}
+                    onChange={(event) => setResetData({ ...resetData, loginHint: event.target.value })}
+                    placeholder="Например, leader07@demo.local"
+                  />
+                </FormField>
+                <FormField label="ФИО">
+                  <input
+                    className="input"
+                    value={resetData.fullName}
+                    onChange={(event) => setResetData({ ...resetData, fullName: event.target.value })}
+                    placeholder="Иванов Иван"
+                  />
+                </FormField>
+                <FormField label="Команда">
+                  <input
+                    className="input"
+                    value={resetData.teamName}
+                    onChange={(event) => setResetData({ ...resetData, teamName: event.target.value })}
+                    placeholder="Название команды"
+                  />
+                </FormField>
+                <FormField label="Контакт для связи" error={resetErrors.contact}>
+                  <input
+                    className="input"
+                    value={resetData.contact}
+                    onChange={(event) => setResetData({ ...resetData, contact: event.target.value })}
+                    placeholder="Телефон, Telegram или почта"
+                  />
+                </FormField>
+                <FormField label="Комментарий">
+                  <textarea
+                    className="note-input"
+                    value={resetData.note}
+                    onChange={(event) => setResetData({ ...resetData, note: event.target.value })}
+                    placeholder="Например, пароль меняли недавно, войти не получается"
+                  />
+                </FormField>
+                <button className="btn primary" type="submit" disabled={loading}>
+                  Отправить заявку
+                </button>
+              </form>
+            ) : null}
+          </>
         ) : (
           <form className="form-card" id="auth-user-register" onSubmit={submitRegister}>
             <h3>Регистрация навигатора</h3>

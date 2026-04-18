@@ -67,6 +67,12 @@ enum AppealStatus {
   CLOSED
 }
 
+enum PasswordResetRequestStatus {
+  OPEN
+  COMPLETED
+  CANCELLED
+}
+
 enum BranchAwardType {
   PARTICIPATION
   ACTIVE_PARTICIPATION
@@ -172,6 +178,7 @@ model User {
   branchAwardsGiven    BranchAward[] @relation("BranchAwardOrganizer")
   resourceAdjustments     BeaverResourceAdjustment[]
   resourceAdjustmentsGiven BeaverResourceAdjustment[] @relation("BeaverResourceAdjustmentOrganizer")
+  passwordResetRequestsResolved PasswordResetRequest[] @relation("PasswordResetRequestResolvedBy")
 }
 
 model Sphere {
@@ -480,6 +487,25 @@ model AppealMessage {
 
   appeal Appeal @relation(fields: [appealId], references: [id])
   user   User   @relation(fields: [userId], references: [id])
+}
+
+model PasswordResetRequest {
+  id            String                     @id @default(cuid())
+  loginHint     String?
+  fullName      String?
+  teamName      String?
+  contact       String
+  note          String?
+  status        PasswordResetRequestStatus @default(OPEN)
+  resolvedLogin String?
+  resolvedAt    DateTime?
+  resolvedById  String?
+  createdAt     DateTime                   @default(now())
+  updatedAt     DateTime                   @updatedAt
+
+  resolvedBy User? @relation("PasswordResetRequestResolvedBy", fields: [resolvedById], references: [id])
+
+  @@index([status, createdAt])
 }
 
 model BranchAward {
