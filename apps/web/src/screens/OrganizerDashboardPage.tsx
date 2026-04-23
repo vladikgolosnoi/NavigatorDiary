@@ -88,6 +88,7 @@ type PasswordResetRequest = {
   note?: string | null
   status: 'OPEN' | 'COMPLETED' | 'CANCELLED'
   resolvedLogin?: string | null
+  issuedPassword?: string | null
   createdAt: string
   resolvedAt?: string | null
   resolvedBy?: {
@@ -553,6 +554,15 @@ export function OrganizerDashboardPage() {
     }
   }
 
+  const copyIssuedPassword = async (password: string) => {
+    try {
+      await navigator.clipboard.writeText(password)
+      setNotice('Временный пароль скопирован. Его нужно сообщить пользователю вручную.')
+    } catch {
+      setErrorMessage('Не удалось скопировать пароль. Скопируйте его вручную из карточки заявки.')
+    }
+  }
+
   const awardBranches = async () => {
     if (!auth.token) {
       setErrorMessage('Для начисления желудей требуется вход.')
@@ -995,6 +1005,16 @@ export function OrganizerDashboardPage() {
                       Статус: {request.status === 'OPEN' ? 'Открыта' : request.status === 'COMPLETED' ? 'Обработана' : 'Закрыта'}
                       {request.resolvedLogin ? ` · выдан доступ для ${request.resolvedLogin}` : ''}
                     </p>
+                    {request.issuedPassword ? (
+                      <div className="stack-actions compact">
+                        <p>
+                          Временный пароль: <strong>{request.issuedPassword}</strong>
+                        </p>
+                        <button className="btn ghost" onClick={() => copyIssuedPassword(request.issuedPassword!)}>
+                          Скопировать пароль
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
                   {isOpen ? (
                     <div className="stack-list">
@@ -1042,11 +1062,16 @@ export function OrganizerDashboardPage() {
                       </div>
                     </div>
                   ) : (
-                    <p className="hint">
-                      {request.resolvedAt
-                        ? `Обработана ${new Date(request.resolvedAt).toLocaleString('ru-RU')}`
-                        : 'Заявка закрыта'}
-                    </p>
+                    <div className="stack-list">
+                      <p className="hint">
+                        {request.resolvedAt
+                          ? `Обработана ${new Date(request.resolvedAt).toLocaleString('ru-RU')}`
+                          : 'Заявка закрыта'}
+                      </p>
+                      {request.status === 'COMPLETED' ? (
+                        <p className="hint">Пароль не отправляется автоматически. Его нужно передать пользователю вручную.</p>
+                      ) : null}
+                    </div>
                   )}
                 </div>
               )

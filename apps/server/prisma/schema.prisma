@@ -498,6 +498,7 @@ model PasswordResetRequest {
   note          String?
   status        PasswordResetRequestStatus @default(OPEN)
   resolvedLogin String?
+  issuedPassword String?
   resolvedAt    DateTime?
   resolvedById  String?
   createdAt     DateTime                   @default(now())

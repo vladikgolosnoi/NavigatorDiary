@@ -248,7 +248,9 @@ export function AuthUserPage() {
           note: resetData.note.trim() || undefined
         })
       })
-      setResetNotice('Заявка на восстановление отправлена. Организатор задаст временный пароль вручную.')
+      setResetNotice(
+        'Заявка на восстановление отправлена. Организатор задаст временный пароль и передаст его вручную: на почту пароль автоматически не приходит.'
+      )
       setResetData(emptyPasswordResetRequest)
       setResetErrors({})
       setShowResetForm(false)
@@ -360,7 +362,7 @@ export function AuthUserPage() {
                 <h3>Восстановление доступа</h3>
                 <p className="hint">
                   Если почта не ваша или пароль забыли, оставьте заявку. Организатор задаст временный
-                  пароль вручную и свяжется с вами.
+                  пароль и передаст его вручную. Автоматической отправки на почту здесь нет.
                 </p>
                 <FormField label="Логин или email, если помните">
                   <input

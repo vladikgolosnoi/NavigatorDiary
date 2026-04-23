@@ -261,7 +261,8 @@ export class AuthService {
           status: PasswordResetRequestStatus.COMPLETED,
           resolvedAt: new Date(),
           resolvedById: organizerId,
-          resolvedLogin: normalizedLogin
+          resolvedLogin: normalizedLogin,
+          issuedPassword: dto.newPassword
         }
       })
     ])
@@ -292,7 +293,8 @@ export class AuthService {
       data: {
         status: PasswordResetRequestStatus.CANCELLED,
         resolvedAt: new Date(),
-        resolvedById: organizerId
+        resolvedById: organizerId,
+        issuedPassword: null
       }
     })
 
