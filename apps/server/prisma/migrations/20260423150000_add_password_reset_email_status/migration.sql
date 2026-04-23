@@ -1,0 +1,4 @@
+ALTER TABLE "PasswordResetRequest"
+ADD COLUMN IF NOT EXISTS "emailRecipient" TEXT,
+ADD COLUMN IF NOT EXISTS "emailSentAt" TIMESTAMP(3),
+ADD COLUMN IF NOT EXISTS "emailError" TEXT;

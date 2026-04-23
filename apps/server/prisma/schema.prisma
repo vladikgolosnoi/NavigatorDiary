@@ -499,6 +499,9 @@ model PasswordResetRequest {
   status        PasswordResetRequestStatus @default(OPEN)
   resolvedLogin String?
   issuedPassword String?
+  emailRecipient String?
+  emailSentAt    DateTime?
+  emailError     String?
   resolvedAt    DateTime?
   resolvedById  String?
   createdAt     DateTime                   @default(now())

@@ -89,6 +89,9 @@ type PasswordResetRequest = {
   status: 'OPEN' | 'COMPLETED' | 'CANCELLED'
   resolvedLogin?: string | null
   issuedPassword?: string | null
+  emailRecipient?: string | null
+  emailSentAt?: string | null
+  emailError?: string | null
   createdAt: string
   resolvedAt?: string | null
   resolvedBy?: {
@@ -986,7 +989,8 @@ export function OrganizerDashboardPage() {
       <article className="card" id="organizer-password-resets">
         <h3>Заявки на восстановление доступа</h3>
         <p className="hint">
-          Пользователи оставляют заявку на входе. Здесь можно задать временный пароль вручную без email-рассылки.
+          Пользователи оставляют заявку на входе. Здесь можно задать временный пароль. Если для пользователя настроена
+          рабочая почта и SMTP подключен, пароль уйдет на email автоматически.
         </p>
         {passwordResetRequests.length ? (
           <div className="stack-list">
@@ -1015,6 +1019,12 @@ export function OrganizerDashboardPage() {
                         </button>
                       </div>
                     ) : null}
+                    {request.emailSentAt ? (
+                      <p className="hint">
+                        Письмо отправлено на {request.emailRecipient} {new Date(request.emailSentAt).toLocaleString('ru-RU')}
+                      </p>
+                    ) : null}
+                    {request.emailError ? <p className="hint">Email не отправлен: {request.emailError}</p> : null}
                   </div>
                   {isOpen ? (
                     <div className="stack-list">
@@ -1069,7 +1079,11 @@ export function OrganizerDashboardPage() {
                           : 'Заявка закрыта'}
                       </p>
                       {request.status === 'COMPLETED' ? (
-                        <p className="hint">Пароль не отправляется автоматически. Его нужно передать пользователю вручную.</p>
+                        <p className="hint">
+                          {request.emailSentAt
+                            ? 'Пользователь получил письмо на указанную почту.'
+                            : 'Если письмо не отправлено, пароль нужно передать пользователю вручную.'}
+                        </p>
                       ) : null}
                     </div>
                   )}

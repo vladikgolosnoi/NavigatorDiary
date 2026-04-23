@@ -16,6 +16,7 @@ import { CreatePasswordResetRequestDto } from './dto/create-password-reset-reque
 import { ResolvePasswordResetRequestDto } from './dto/resolve-password-reset-request.dto'
 import * as bcrypt from 'bcryptjs'
 import { AuditService } from '../audit/audit.service'
+import * as nodemailer from 'nodemailer'
 
 @Injectable()
 export class AuthService {
@@ -46,6 +47,72 @@ export class AuthService {
   private normalizeMiddleName(value?: string | null) {
     const normalized = value?.trim().replace(/\s+/g, ' ')
     return normalized ? normalized.toLowerCase() : null
+  }
+
+  private isValidEmail(value?: string | null) {
+    if (!value) {
+      return false
+    }
+
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/i.test(value.trim())
+  }
+
+  private getPasswordResetEmailRecipient(contact: string, userEmail?: string | null) {
+    if (this.isValidEmail(contact)) {
+      return contact.trim().toLowerCase()
+    }
+
+    if (this.isValidEmail(userEmail) && !userEmail?.endsWith('@demo.local')) {
+      return userEmail!.trim().toLowerCase()
+    }
+
+    return null
+  }
+
+  private async sendPasswordResetEmail(recipient: string, login: string, password: string, fullName?: string | null) {
+    const host = process.env.SMTP_HOST?.trim()
+    const portRaw = process.env.SMTP_PORT?.trim()
+    const user = process.env.SMTP_USER?.trim()
+    const pass = process.env.SMTP_PASS?.trim()
+    const from = process.env.SMTP_FROM?.trim()
+
+    if (!host || !portRaw || !user || !pass || !from) {
+      throw new Error('SMTP не настроен')
+    }
+
+    const port = Number(portRaw)
+    const secure = process.env.SMTP_SECURE?.trim() === 'true' || port === 465
+
+    if (!Number.isFinite(port)) {
+      throw new Error('SMTP_PORT задан некорректно')
+    }
+
+    const transporter = nodemailer.createTransport({
+      host,
+      port,
+      secure,
+      auth: { user, pass }
+    })
+
+    const addressee = fullName?.trim() || 'пользователь'
+
+    await transporter.sendMail({
+      from,
+      to: recipient,
+      subject: 'Восстановление доступа — Дневник Навигатора',
+      text: [
+        `Здравствуйте, ${addressee}.`,
+        '',
+        'Организатор выдал вам новый временный пароль для входа в сервис "Дневник Навигатора".',
+        '',
+        `Логин: ${login}`,
+        `Временный пароль: ${password}`,
+        '',
+        'После входа рекомендуем сразу сменить пароль в профиле.',
+        '',
+        'Ссылка для входа: https://navigator-diary.ru'
+      ].join('\n')
+    })
   }
 
   private async findDuplicateNavigator(dto: RegisterUserDto) {
@@ -249,6 +316,7 @@ export class AuthService {
     }
 
     const passwordHash = await bcrypt.hash(dto.newPassword, 10)
+    const emailRecipient = this.getPasswordResetEmailRecipient(request.contact, user.email)
 
     await this.prisma.$transaction([
       this.prisma.user.update({
@@ -262,17 +330,43 @@ export class AuthService {
           resolvedAt: new Date(),
           resolvedById: organizerId,
           resolvedLogin: normalizedLogin,
-          issuedPassword: dto.newPassword
+          issuedPassword: dto.newPassword,
+          emailRecipient,
+          emailSentAt: null,
+          emailError: emailRecipient ? null : 'У пользователя нет подтвержденной почты для автоматической отправки'
         }
       })
     ])
 
-    await this.auditService.log('PASSWORD_RESET_REQUEST_COMPLETED', organizerId, 'PasswordResetRequest', requestId, {
-      resolvedLogin: normalizedLogin,
-      targetUserId: user.id
+    let emailSent = false
+    let emailError: string | null = null
+
+    if (emailRecipient) {
+      try {
+        await this.sendPasswordResetEmail(emailRecipient, normalizedLogin, dto.newPassword, request.fullName)
+        emailSent = true
+      } catch (error) {
+        emailError = error instanceof Error ? error.message : 'Не удалось отправить письмо'
+      }
+    }
+
+    await this.prisma.passwordResetRequest.update({
+      where: { id: requestId },
+      data: {
+        emailSentAt: emailSent ? new Date() : null,
+        emailError
+      }
     })
 
-    return { success: true }
+    await this.auditService.log('PASSWORD_RESET_REQUEST_COMPLETED', organizerId, 'PasswordResetRequest', requestId, {
+      resolvedLogin: normalizedLogin,
+      targetUserId: user.id,
+      emailRecipient,
+      emailSent,
+      emailError
+    })
+
+    return { success: true, emailSent, emailRecipient, emailError }
   }
 
   async cancelPasswordResetRequest(requestId: string, organizerId: string) {
@@ -294,7 +388,10 @@ export class AuthService {
         status: PasswordResetRequestStatus.CANCELLED,
         resolvedAt: new Date(),
         resolvedById: organizerId,
-        issuedPassword: null
+        issuedPassword: null,
+        emailRecipient: null,
+        emailSentAt: null,
+        emailError: null
       }
     })
 
