@@ -49,6 +49,96 @@ export class AuthService {
     return normalized ? normalized.toLowerCase() : null
   }
 
+  private parseFullName(fullName?: string | null) {
+    const normalized = fullName?.trim().replace(/\s+/g, ' ')
+    if (!normalized) {
+      return null
+    }
+
+    const [lastName, firstName, ...middleNameParts] = normalized.split(' ')
+    if (!lastName || !firstName) {
+      return null
+    }
+
+    return {
+      lastName: this.normalizeName(lastName),
+      firstName: this.normalizeName(firstName),
+      middleName: this.normalizeMiddleName(middleNameParts.join(' '))
+    }
+  }
+
+  private async findPasswordResetUserByName(fullName?: string | null, teamName?: string | null) {
+    const parsed = this.parseFullName(fullName)
+    if (!parsed) {
+      return null
+    }
+
+    const normalizedTeamName = teamName?.trim().replace(/\s+/g, ' ')
+    const middleNameVariants = parsed.middleName ? [parsed.middleName, null] : [null]
+    const teamNameVariants = normalizedTeamName ? [normalizedTeamName, null] : [null]
+
+    for (const teamNameVariant of teamNameVariants) {
+      for (const middleNameVariant of middleNameVariants) {
+        const candidates = await this.prisma.user.findMany({
+          where: {
+            firstName: { equals: parsed.firstName, mode: 'insensitive' },
+            lastName: { equals: parsed.lastName, mode: 'insensitive' },
+            ...(middleNameVariant
+              ? {
+                  middleName: { equals: middleNameVariant, mode: 'insensitive' }
+                }
+              : {}),
+            ...(teamNameVariant
+              ? {
+                  team: {
+                    name: { equals: teamNameVariant, mode: 'insensitive' }
+                  }
+                }
+              : {}),
+            status: {
+              not: UserStatus.REJECTED
+            }
+          },
+          orderBy: [{ status: 'asc' }, { createdAt: 'desc' }]
+        })
+
+        if (candidates.length === 1) {
+          return candidates[0]
+        }
+      }
+    }
+
+    return null
+  }
+
+  private async resolvePasswordResetUser(login: string, request: { loginHint?: string | null; contact: string; fullName?: string | null; teamName?: string | null }) {
+    const normalizedLogin = login.trim().toLowerCase()
+
+    const directUser = await this.prisma.user.findUnique({
+      where: { email: normalizedLogin }
+    })
+
+    if (directUser) {
+      return directUser
+    }
+
+    const fallbackEmails = Array.from(
+      new Set([request.loginHint, request.contact].filter((value): value is string => this.isValidEmail(value)).map((value) => value.trim().toLowerCase()))
+    )
+
+    for (const fallbackEmail of fallbackEmails) {
+      const fallbackUser = await this.prisma.user.findUnique({
+        where: { email: fallbackEmail }
+      })
+
+      if (fallbackUser) {
+        return fallbackUser
+      }
+    }
+
+    return this.findPasswordResetUserByName(request.fullName, request.teamName)
+  }
+
   private isValidEmail(value?: string | null) {
     if (!value) {
       return false
@@ -307,13 +397,17 @@ export class AuthService {
     }
 
     const normalizedLogin = dto.login.trim().toLowerCase()
-    const user = await this.prisma.user.findUnique({
-      where: { email: normalizedLogin }
-    })
+    const user = await this.resolvePasswordResetUser(normalizedLogin, request)
 
     if (!user) {
       throw new NotFoundException('Пользователь с таким логином не найден')
     }
+
+    if (!user.email?.trim()) {
+      throw new BadRequestException('У найденного пользователя не указан логин для входа')
+    }
+
+    const resolvedLogin = user.email.trim().toLowerCase()
 
     const passwordHash = await bcrypt.hash(dto.newPassword, 10)
     const emailRecipient = this.getPasswordResetEmailRecipient(request.contact, user.email)
@@ -329,7 +423,7 @@ export class AuthService {
           status: PasswordResetRequestStatus.COMPLETED,
           resolvedAt: new Date(),
           resolvedById: organizerId,
-          resolvedLogin: normalizedLogin,
+          resolvedLogin,
           issuedPassword: dto.newPassword,
           emailRecipient,
           emailSentAt: null,
@@ -343,7 +437,7 @@ export class AuthService {
 
     if (emailRecipient) {
       try {
-        await this.sendPasswordResetEmail(emailRecipient, normalizedLogin, dto.newPassword, request.fullName)
+        await this.sendPasswordResetEmail(emailRecipient, resolvedLogin, dto.newPassword, request.fullName)
         emailSent = true
       } catch (error) {
         emailError = error instanceof Error ? error.message : 'Не удалось отправить письмо'
@@ -359,7 +453,7 @@ export class AuthService {
     })
 
     await this.auditService.log('PASSWORD_RESET_REQUEST_COMPLETED', organizerId, 'PasswordResetRequest', requestId, {
-      resolvedLogin: normalizedLogin,
+      resolvedLogin,
       targetUserId: user.id,
       emailRecipient,
       emailSent,
