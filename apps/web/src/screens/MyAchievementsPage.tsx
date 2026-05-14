@@ -15,7 +15,7 @@ const ageStatusMap: Record<string, string> = {
   SCOUT: 'Следопыт',
   NAVIGATOR: 'Навигатор',
   NOVATOR: 'Новатор',
-  WANDERER: 'Странник'
+  WANDERER: 'Лидер'
 }
 
 const stageMap: Record<string, string> = {

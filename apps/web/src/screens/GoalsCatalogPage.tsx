@@ -26,6 +26,14 @@ type Goal = {
   name: string
 }
 
+const AGE_GROUP_LABEL_OVERRIDES: Record<string, string> = {
+  'Странник (18-22 лет)': 'Лидер (18-22 лет)'
+}
+
+function getAgeGroupLabel(name: string) {
+  return AGE_GROUP_LABEL_OVERRIDES[name] ?? name
+}
+
 type SelectionState = {
   selectedGoalIds: string[]
 }
@@ -296,7 +304,7 @@ export function GoalsCatalogPage() {
                   setActiveCompetencyId('')
                 }}
               >
-                {group.name}
+                {getAgeGroupLabel(group.name)}
               </button>
             ))}
           </div>
