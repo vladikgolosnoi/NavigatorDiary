@@ -133,7 +133,7 @@ export function MyGoalsPage() {
       const nextStatus = nextStep >= finalProgressStep ? 'PENDING_CONFIRMATION' : 'IN_PROGRESS'
       setNotice(
         nextStep >= finalProgressStep
-          ? 'Цель отмечена как достигнутая. Теперь команда может поддержать её реакциями.'
+          ? 'Цель отмечена как достигнутая. Теперь команда и сам автор могут поддержать её реакциями.'
           : 'Прогресс сохранён.'
       )
       setGoals((prev) =>
@@ -239,7 +239,7 @@ export function MyGoalsPage() {
         <div className="card-grid">
           <article className="card">
             <h3>Поддержка целей команды</h3>
-            <p>Здесь появляются цели, которые другие навигаторы уже отметили как достигнутые.</p>
+            <p>Здесь появляются цели команды, которые уже отмечены как достигнутые. Реакцию может поставить и сам автор цели.</p>
             <div className="stack-list">
               {teamGoals.map((goal) => (
                 <div key={goal.id} className="stack-item">

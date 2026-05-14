@@ -153,7 +153,6 @@ export class GoalsService {
     const goals = await this.prisma.userGoal.findMany({
       where: {
         user: { teamId: user.teamId },
-        userId: { not: user.userId },
         status: GoalStatus.PENDING_CONFIRMATION
       },
       include: {
@@ -284,10 +283,6 @@ export class GoalsService {
 
     if (!userGoal) {
       throw new NotFoundException('Цель не найдена')
-    }
-
-    if (userGoal.userId === user.userId) {
-      throw new ForbiddenException('Нельзя голосовать за свою цель')
     }
 
     if (!user.teamId || userGoal.user.teamId !== user.teamId) {
